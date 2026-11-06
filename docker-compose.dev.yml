@@ -1,0 +1,26 @@
+# Solo para desarrollo local: base de datos PostgreSQL.
+# El docker-compose.yml de producción (Fase 13) tendrá exactamente dos servicios: db + app.
+name: luris-dev
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-luris}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-luris}
+      POSTGRES_DB: ${POSTGRES_DB:-luris}
+      TZ: America/Bogota
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      # PostgreSQL 18+ guarda los datos en /var/lib/postgresql/<versión>/docker.
+      - luris-dev-db:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  luris-dev-db:

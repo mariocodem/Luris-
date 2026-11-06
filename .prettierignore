@@ -1,0 +1,16 @@
+# Generados / dependencias
+node_modules
+.next
+out
+build
+coverage
+pnpm-lock.yaml
+next-env.d.ts
+*.tsbuildinfo
+
+# Prisma genera código propio
+src/generated
+
+# Documentos guía mantenidos a mano (no reformatear)
+CLAUDE.md
+AGENTS.md

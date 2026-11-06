@@ -1,0 +1,499 @@
+// LURIS — modelo de datos (ver §4 de CLAUDE.md).
+//
+// Convenciones:
+// - Modelos y campos en español (camelCase); tablas y columnas en snake_case.
+// - IDs UUID v7 (ordenables en el tiempo).
+// - Instantes en timestamptz. Las fechas oficiales de las plataformas son `date` (día calendario):
+//   se guardan tal cual las informa la plataforma, sin conversión de zona horaria.
+// - Multi-despacho: toda tabla de negocio tiene `despachoId`. Las tablas hijas referencian a su
+//   padre con una clave foránea compuesta (padreId, despachoId), así la base de datos impide que
+//   un registro apunte a datos de otro despacho. Ver src/shared/infrastructure/prisma.
+// - Restricciones CHECK (formato de radicado, roles, consentimientos…) en la migración inicial.
+
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enumeraciones ────────────────────────────────────────────────────────────
+
+enum EstadoDespacho {
+  ACTIVO
+  SUSPENDIDO
+
+  @@map("estado_despacho")
+}
+
+enum CodigoPlataforma {
+  RAMA_CPNU
+  SPOA
+  SAMAI
+  SIUGJ
+  TYBA
+
+  @@map("codigo_plataforma")
+}
+
+enum TipoIdentificador {
+  RADICADO
+  NUNC
+
+  @@map("tipo_identificador")
+}
+
+/// Resultado de la última consulta a una plataforma (mismos códigos que ErrorPlataforma).
+enum EstadoConsulta {
+  EXITOSA
+  NO_ENCONTRADO
+  PLATAFORMA_NO_DISPONIBLE
+  CREDENCIALES_INVALIDAS
+  REQUIERE_INTERVENCION
+  LIMITE_DE_CONSULTAS
+  RESPUESTA_INESPERADA
+
+  @@map("estado_consulta")
+}
+
+enum TipoAsignacion {
+  /// Abogado responsable del proceso (máximo uno por proceso).
+  RESPONSABLE
+  /// Persona asignada para apoyar el seguimiento (p. ej. un asistente).
+  ASIGNADO
+
+  @@map("tipo_asignacion")
+}
+
+enum AlcanceCredencial {
+  /// Credencial del despacho, la registra un administrador.
+  DESPACHO
+  /// Credencial personal de un abogado.
+  PERSONAL
+
+  @@map("alcance_credencial")
+}
+
+enum EstadoDocumento {
+  PENDIENTE
+  DESCARGADO
+  NO_DISPONIBLE
+
+  @@map("estado_documento")
+}
+
+enum EstadoConsultaMasiva {
+  PENDIENTE
+  EN_PROCESO
+  COMPLETADA
+  CANCELADA
+
+  @@map("estado_consulta_masiva")
+}
+
+enum EstadoItemConsultaMasiva {
+  PENDIENTE
+  EN_PROCESO
+  COMPLETADO
+  FALLIDO
+  /// Plataforma con consulta asistida: espera que el usuario resuelva el reto (§6).
+  PENDIENTE_CONFIRMACION
+
+  @@map("estado_item_consulta_masiva")
+}
+
+enum CanalNotificacion {
+  CORREO
+  WHATSAPP
+
+  @@map("canal_notificacion")
+}
+
+enum FrecuenciaNotificacion {
+  INMEDIATA
+  RESUMEN_DIARIO
+
+  @@map("frecuencia_notificacion")
+}
+
+enum EstadoNotificacion {
+  PENDIENTE
+  ENVIADA
+  FALLIDA
+
+  @@map("estado_notificacion")
+}
+
+// ─── Despachos, usuarios y membresías ─────────────────────────────────────────
+// Compatibles con Better Auth (Fase 2): Despacho = organization, Membresia = member.
+
+/// Tenant: un despacho jurídico o abogado independiente.
+model Despacho {
+  id            String         @id @default(uuid(7)) @db.Uuid
+  nombre        String         @db.VarChar(200)
+  slug          String         @unique @db.VarChar(100)
+  /// Solo dígitos (incluye el dígito de verificación).
+  nit           String?        @unique @db.VarChar(15)
+  plan          String         @default("ESTANDAR") @db.VarChar(50)
+  estado        EstadoDespacho @default(ACTIVO)
+  logo          String?
+  metadata      String?
+  creadoEn      DateTime       @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime       @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  membresias         Membresia[]
+  procesos           Proceso[]
+  etiquetas          Etiqueta[]
+  registrosAuditoria RegistroAuditoria[]
+
+  @@map("despachos")
+}
+
+/// Persona con cuenta en LURIS. Es global: puede pertenecer a varios despachos.
+model Usuario {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  nombre          String   @db.VarChar(200)
+  /// Siempre en minúsculas (restricción CHECK).
+  email           String   @unique @db.VarChar(320)
+  emailVerificado Boolean  @default(false) @map("email_verificado")
+  imagen          String?
+  /// Operador de LURIS: administra despachos, no ve datos de procesos.
+  esSuperadmin    Boolean  @default(false) @map("es_superadmin")
+  creadoEn        DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn   DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  membresias         Membresia[]
+  registrosAuditoria RegistroAuditoria[]
+
+  @@map("usuarios")
+}
+
+/// Pertenencia de un usuario a un despacho, con su rol.
+model Membresia {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  despachoId    String   @map("despacho_id") @db.Uuid
+  usuarioId     String   @map("usuario_id") @db.Uuid
+  /// administrador | abogado | asistente (restricción CHECK). Texto, no enum, por compatibilidad con Better Auth.
+  rol           String   @db.VarChar(20)
+  activa        Boolean  @default(true)
+  creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  despacho Despacho @relation(fields: [despachoId], references: [id], onDelete: Cascade)
+  usuario  Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  asignaciones            AsignacionProceso[]
+  credenciales            CredencialPlataforma[]
+  consultasMasivas        ConsultaMasiva[]
+  preferenciaNotificacion PreferenciaNotificacion?
+  notificaciones          Notificacion[]
+
+  @@unique([despachoId, usuarioId])
+  @@unique([id, despachoId])
+  @@index([usuarioId])
+  @@map("membresias")
+}
+
+// ─── Procesos ─────────────────────────────────────────────────────────────────
+
+model Proceso {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  despachoId    String   @map("despacho_id") @db.Uuid
+  /// 23 dígitos, sin guiones ni espacios. Texto para conservar los ceros a la izquierda.
+  radicado      String?  @db.VarChar(23)
+  /// 21 dígitos (SPOA). Al menos uno de radicado o nunc es obligatorio (CHECK).
+  nunc          String?  @db.VarChar(21)
+  alias         String?  @db.VarChar(200)
+  /// Cliente o parte, texto libre.
+  cliente       String?  @db.VarChar(300)
+  /// false = archivado.
+  activo        Boolean  @default(true)
+  creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  despacho Despacho @relation(fields: [despachoId], references: [id], onDelete: Cascade)
+
+  asignaciones AsignacionProceso[]
+  etiquetas    EtiquetaProceso[]
+  plataformas  ProcesoPlataforma[]
+
+  @@unique([despachoId, radicado])
+  @@unique([despachoId, nunc])
+  @@unique([id, despachoId])
+  @@index([despachoId, activo])
+  @@map("procesos")
+}
+
+/// Quién sigue cada proceso: el abogado responsable y las personas asignadas.
+model AsignacionProceso {
+  id          String         @id @default(uuid(7)) @db.Uuid
+  despachoId  String         @map("despacho_id") @db.Uuid
+  procesoId   String         @map("proceso_id") @db.Uuid
+  membresiaId String         @map("membresia_id") @db.Uuid
+  tipo        TipoAsignacion
+  creadoEn    DateTime       @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  proceso   Proceso   @relation(fields: [procesoId, despachoId], references: [id, despachoId], onDelete: Cascade)
+  membresia Membresia @relation(fields: [membresiaId, despachoId], references: [id, despachoId], onDelete: Cascade)
+
+  @@unique([procesoId, membresiaId])
+  @@unique([procesoId], map: "asignaciones_proceso_un_responsable", where: raw("tipo = 'RESPONSABLE'"))
+  @@index([membresiaId, tipo])
+  @@map("asignaciones_proceso")
+}
+
+model Etiqueta {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  despachoId String   @map("despacho_id") @db.Uuid
+  nombre     String   @db.VarChar(50)
+  color      String?  @db.VarChar(20)
+  creadoEn   DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  despacho Despacho          @relation(fields: [despachoId], references: [id], onDelete: Cascade)
+  procesos EtiquetaProceso[]
+
+  @@unique([despachoId, nombre])
+  @@unique([id, despachoId])
+  @@map("etiquetas")
+}
+
+model EtiquetaProceso {
+  despachoId String   @map("despacho_id") @db.Uuid
+  procesoId  String   @map("proceso_id") @db.Uuid
+  etiquetaId String   @map("etiqueta_id") @db.Uuid
+  creadoEn   DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  proceso  Proceso  @relation(fields: [procesoId, despachoId], references: [id, despachoId], onDelete: Cascade)
+  etiqueta Etiqueta @relation(fields: [etiquetaId, despachoId], references: [id, despachoId], onDelete: Cascade)
+
+  @@id([procesoId, etiquetaId])
+  @@index([etiquetaId])
+  @@map("etiquetas_proceso")
+}
+
+// ─── Plataformas y actuaciones ────────────────────────────────────────────────
+
+/// En qué plataformas existe el proceso y cómo fue su última consulta.
+model ProcesoPlataforma {
+  id                     String           @id @default(uuid(7)) @db.Uuid
+  despachoId             String           @map("despacho_id") @db.Uuid
+  procesoId              String           @map("proceso_id") @db.Uuid
+  plataforma             CodigoPlataforma
+  /// Identificador del proceso en la plataforma (p. ej. idProceso de la CPNU).
+  idExterno              String?          @map("id_externo") @db.VarChar(100)
+  /// Datos del proceso tal como los informa la plataforma (despacho judicial, partes, clase…).
+  datosProceso           Json?            @map("datos_proceso")
+  ultimaSincronizacionEn DateTime?        @map("ultima_sincronizacion_en") @db.Timestamptz(3)
+  estadoUltimaConsulta   EstadoConsulta?  @map("estado_ultima_consulta")
+  creadoEn               DateTime         @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn          DateTime         @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  proceso     Proceso     @relation(fields: [procesoId, despachoId], references: [id, despachoId], onDelete: Cascade)
+  actuaciones Actuacion[]
+
+  @@unique([procesoId, plataforma])
+  @@unique([id, despachoId])
+  @@index([despachoId, plataforma])
+  @@map("procesos_plataforma")
+}
+
+model Actuacion {
+  id                  String    @id @default(uuid(7)) @db.Uuid
+  despachoId          String    @map("despacho_id") @db.Uuid
+  procesoPlataformaId String    @map("proceso_plataforma_id") @db.Uuid
+  idExterno           String?   @map("id_externo") @db.VarChar(100)
+  /// idExterno si la plataforma lo da; si no, un hash estable del contenido. Evita duplicados.
+  claveDeduplicacion  String    @map("clave_deduplicacion") @db.VarChar(100)
+  /// Fecha oficial de la actuación, según la plataforma.
+  fechaActuacion      DateTime  @map("fecha_actuacion") @db.Date
+  /// Fecha oficial en que la plataforma registró la actuación (nula si la plataforma no la informa).
+  fechaRegistro       DateTime? @map("fecha_registro") @db.Date
+  descripcion         String
+  anotacion           String?
+  tieneDocumentos     Boolean   @default(false) @map("tiene_documentos")
+  /// Cuándo la detectó LURIS. SOLO auditoría: nunca se muestra como fecha de la actuación.
+  detectadaEn         DateTime  @default(now()) @map("detectada_en") @db.Timestamptz(3)
+
+  procesoPlataforma ProcesoPlataforma @relation(fields: [procesoPlataformaId, despachoId], references: [id, despachoId], onDelete: Cascade)
+  documentos        Documento[]
+  notificaciones    Notificacion[]
+
+  @@unique([procesoPlataformaId, claveDeduplicacion])
+  @@unique([id, despachoId])
+  @@index([procesoPlataformaId, fechaActuacion(sort: Desc)])
+  @@index([despachoId, fechaActuacion(sort: Desc)])
+  @@map("actuaciones")
+}
+
+model Documento {
+  id                 String          @id @default(uuid(7)) @db.Uuid
+  despachoId         String          @map("despacho_id") @db.Uuid
+  actuacionId        String          @map("actuacion_id") @db.Uuid
+  nombre             String          @db.VarChar(300)
+  /// URL o referencia del documento en la plataforma de origen.
+  urlOrigen          String?         @map("url_origen")
+  estado             EstadoDocumento @default(PENDIENTE)
+  /// Tipo MIME real (validado al descargar), no el que declara la plataforma.
+  tipoMime           String?         @map("tipo_mime") @db.VarChar(100)
+  tamanoBytes        Int?            @map("tamano_bytes")
+  sha256             String?         @db.Char(64)
+  rutaAlmacenamiento String?         @map("ruta_almacenamiento")
+  descargadoEn       DateTime?       @map("descargado_en") @db.Timestamptz(3)
+  creadoEn           DateTime        @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  actuacion Actuacion @relation(fields: [actuacionId, despachoId], references: [id, despachoId], onDelete: Cascade)
+
+  @@index([actuacionId])
+  @@index([despachoId, sha256])
+  @@map("documentos")
+}
+
+// ─── Credenciales de plataformas ──────────────────────────────────────────────
+
+/// Usuario y secreto para plataformas con login. El secreto se guarda cifrado (AES-256-GCM) y
+/// nunca se registra en logs ni se devuelve al cliente.
+model CredencialPlataforma {
+  id               String            @id @default(uuid(7)) @db.Uuid
+  despachoId       String            @map("despacho_id") @db.Uuid
+  /// Quién la registró y dio el consentimiento; para alcance PERSONAL, también su dueño.
+  membresiaId      String            @map("membresia_id") @db.Uuid
+  plataforma       CodigoPlataforma
+  alcance          AlcanceCredencial
+  usuario          String            @db.VarChar(200)
+  secretoCifrado   Bytes             @map("secreto_cifrado")
+  /// Versión de la clave de cifrado usada, para poder rotarla.
+  versionClave     Int               @default(1) @map("version_clave")
+  /// Consentimiento explícito al registrarla (§6).
+  consentimientoEn DateTime          @map("consentimiento_en") @db.Timestamptz(3)
+  creadoEn         DateTime          @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn    DateTime          @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  membresia Membresia @relation(fields: [membresiaId, despachoId], references: [id, despachoId], onDelete: Cascade)
+
+  @@unique([despachoId, plataforma], map: "credenciales_una_por_despacho", where: raw("alcance = 'DESPACHO'"))
+  @@unique([membresiaId, plataforma], map: "credenciales_una_personal", where: raw("alcance = 'PERSONAL'"))
+  @@index([despachoId, plataforma])
+  @@map("credenciales_plataforma")
+}
+
+// ─── Consulta masiva ──────────────────────────────────────────────────────────
+
+model ConsultaMasiva {
+  id            String               @id @default(uuid(7)) @db.Uuid
+  despachoId    String               @map("despacho_id") @db.Uuid
+  creadaPorId   String               @map("creada_por_id") @db.Uuid
+  estado        EstadoConsultaMasiva @default(PENDIENTE)
+  /// Entre 1 y 400 (CHECK).
+  totalItems    Int                  @map("total_items")
+  iniciadaEn    DateTime?            @map("iniciada_en") @db.Timestamptz(3)
+  finalizadaEn  DateTime?            @map("finalizada_en") @db.Timestamptz(3)
+  creadoEn      DateTime             @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime             @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  creadaPor Membresia            @relation(fields: [creadaPorId, despachoId], references: [id, despachoId], onDelete: Cascade)
+  items     ItemConsultaMasiva[]
+
+  @@unique([id, despachoId])
+  @@index([despachoId, creadoEn(sort: Desc)])
+  @@map("consultas_masivas")
+}
+
+/// Un ítem por (identificador × plataforma).
+model ItemConsultaMasiva {
+  id                String                   @id @default(uuid(7)) @db.Uuid
+  despachoId        String                   @map("despacho_id") @db.Uuid
+  consultaMasivaId  String                   @map("consulta_masiva_id") @db.Uuid
+  tipoIdentificador TipoIdentificador        @map("tipo_identificador")
+  /// Radicado (23) o NUNC (21) normalizado, según tipoIdentificador (CHECK).
+  identificador     String                   @db.VarChar(23)
+  plataforma        CodigoPlataforma
+  estado            EstadoItemConsultaMasiva @default(PENDIENTE)
+  resultado         EstadoConsulta?
+  intentos          Int                      @default(0)
+  /// Resumen del resultado (p. ej. cantidad de actuaciones nuevas). Sin datos técnicos.
+  resumen           Json?
+  creadoEn          DateTime                 @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn     DateTime                 @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  consultaMasiva ConsultaMasiva @relation(fields: [consultaMasivaId, despachoId], references: [id, despachoId], onDelete: Cascade)
+
+  @@unique([consultaMasivaId, identificador, plataforma])
+  @@index([consultaMasivaId, estado])
+  @@map("items_consulta_masiva")
+}
+
+// ─── Notificaciones ───────────────────────────────────────────────────────────
+
+/// Preferencias de notificación de una persona en un despacho.
+model PreferenciaNotificacion {
+  id                       String                 @id @default(uuid(7)) @db.Uuid
+  despachoId               String                 @map("despacho_id") @db.Uuid
+  membresiaId              String                 @map("membresia_id") @db.Uuid
+  correoActivo             Boolean                @default(true) @map("correo_activo")
+  /// Solo puede activarse con número y consentimiento registrados (CHECK).
+  whatsappActivo           Boolean                @default(false) @map("whatsapp_activo")
+  /// Formato internacional, solo dígitos (p. ej. 573001234567).
+  numeroWhatsapp           String?                @map("numero_whatsapp") @db.VarChar(15)
+  consentimientoWhatsappEn DateTime?              @map("consentimiento_whatsapp_en") @db.Timestamptz(3)
+  frecuencia               FrecuenciaNotificacion @default(INMEDIATA)
+  creadoEn                 DateTime               @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn            DateTime               @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  membresia Membresia @relation(fields: [membresiaId, despachoId], references: [id, despachoId], onDelete: Cascade)
+
+  @@unique([membresiaId, despachoId])
+  @@map("preferencias_notificacion")
+}
+
+/// Registro de envíos. La clave única garantiza la idempotencia: nunca se envía dos veces la
+/// misma actuación a la misma persona por el mismo canal.
+model Notificacion {
+  id             String             @id @default(uuid(7)) @db.Uuid
+  despachoId     String             @map("despacho_id") @db.Uuid
+  membresiaId    String             @map("membresia_id") @db.Uuid
+  actuacionId    String             @map("actuacion_id") @db.Uuid
+  canal          CanalNotificacion
+  estado         EstadoNotificacion @default(PENDIENTE)
+  intentos       Int                @default(0)
+  /// Código técnico del último fallo, para operación. No se muestra al usuario.
+  codigoError    String?            @map("codigo_error") @db.VarChar(100)
+  programadaPara DateTime           @default(now()) @map("programada_para") @db.Timestamptz(3)
+  enviadaEn      DateTime?          @map("enviada_en") @db.Timestamptz(3)
+  creadoEn       DateTime           @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn  DateTime           @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  destinatario Membresia @relation(fields: [membresiaId, despachoId], references: [id, despachoId], onDelete: Cascade)
+  actuacion    Actuacion @relation(fields: [actuacionId, despachoId], references: [id, despachoId], onDelete: Cascade)
+
+  @@unique([actuacionId, membresiaId, canal])
+  @@index([estado, programadaPara])
+  @@index([membresiaId])
+  @@map("notificaciones")
+}
+
+// ─── Auditoría ────────────────────────────────────────────────────────────────
+
+/// Quién hizo qué y cuándo. Solo se agregan registros (nunca se editan ni se borran desde la app).
+model RegistroAuditoria {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  /// Nulo para acciones de plataforma (superadmin) que no pertenecen a un despacho.
+  despachoId String?  @map("despacho_id") @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  accion     String   @db.VarChar(100)
+  entidad    String?  @db.VarChar(100)
+  entidadId  String?  @map("entidad_id") @db.VarChar(100)
+  /// Detalle de la acción. Nunca credenciales, tokens ni contenido de documentos.
+  datos      Json?
+  ip         String?  @db.VarChar(45)
+  creadoEn   DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  despacho Despacho? @relation(fields: [despachoId], references: [id], onDelete: Cascade)
+  actor    Usuario?  @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([despachoId, creadoEn(sort: Desc)])
+  @@index([actorId])
+  @@map("registros_auditoria")
+}
