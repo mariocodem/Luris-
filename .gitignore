@@ -48,3 +48,9 @@ next-env.d.ts
 
 # almacenamiento local de documentos (desarrollo)
 /storage
+
+# Buzón de correos de desarrollo (contiene enlaces de acceso)
+/.correos/
+
+# Caché del detector de diseño de impeccable
+/.impeccable/hook.cache.json

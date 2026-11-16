@@ -1,0 +1,13 @@
+# Saltos de línea LF en todo el repositorio, también en Windows (Prettier exige endOfLine: 'lf').
+* text=auto eol=lf
+
+# Binarios
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

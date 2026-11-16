@@ -49,6 +49,7 @@ const OPERACIONES_PERMITIDAS: Readonly<Record<Clasificacion, ReadonlySet<string>
   NEGOCIO_SOLO_AGREGAR: new Set([...LECTURAS, ...CREACIONES]),
   DESPACHO_PROPIO: new Set([...LECTURAS, ...ACTUALIZACIONES]),
   USUARIO_DEL_DESPACHO: new Set([...LECTURAS, ...ACTUALIZACIONES]),
+  AUTENTICACION: new Set(),
 };
 
 /** Claves de los argumentos de Prisma que contienen estructura del mismo modelo. */
@@ -123,6 +124,9 @@ function filtroDeAlcance(clasificacion: Clasificacion, despachoId: string): Args
       return { id: despachoId };
     case 'USUARIO_DEL_DESPACHO':
       return { membresias: { some: { despachoId } } };
+    case 'AUTENTICACION':
+      // Inalcanzable: no tiene operaciones permitidas. Se mantiene por seguridad (falla cerrado).
+      throw new ErrorDeAislamiento('Las tablas de autenticación no se usan desde un despacho');
   }
 }
 

@@ -1,0 +1,689 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-15T03:16:57.754Z",
+  "title": "Design System: LURIS",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "Gris papel",
+        "canonical": "#f5f6f8",
+        "dark": "#0f1524",
+        "oklch": "oklch(97.3% 0.003 264.5)",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#232425",
+          "#3f4041",
+          "#5d5e5f",
+          "#7c7d7f",
+          "#9e9ea0",
+          "#c3c4c5",
+          "#eeeeef"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "#1b2233",
+        "dark": "#e6e9f0",
+        "oklch": "oklch(25.4% 0.034 266.8)",
+        "tonalRamp": [
+          "#080b13",
+          "#1e2431",
+          "#383f51",
+          "#555d71",
+          "#747d91",
+          "#969eb1",
+          "#bec4d2",
+          "#eceef3"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Blanco de folio",
+        "canonical": "#ffffff",
+        "dark": "#151d30",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#7d7d7d",
+          "#9e9e9e",
+          "#c4c4c4",
+          "#eeeeee"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Gris archivador",
+        "canonical": "#eef0f3",
+        "dark": "#1c2539",
+        "oklch": "oklch(95.4% 0.005 258.3)",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#232426",
+          "#3e4042",
+          "#5c5e60",
+          "#7c7d80",
+          "#9d9ea1",
+          "#c3c4c6",
+          "#eeeeef"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Gris lápiz",
+        "canonical": "#565f71",
+        "dark": "#9ea8bc",
+        "oklch": "oklch(48.4% 0.031 264.2)",
+        "tonalRamp": [
+          "#080b12",
+          "#1e2430",
+          "#38404f",
+          "#555e70",
+          "#747d90",
+          "#969faf",
+          "#bec4d0",
+          "#eceef3"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Filete",
+        "canonical": "#e2e5eb",
+        "dark": "#263049",
+        "oklch": "oklch(92.1% 0.009 264.5)",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#222427",
+          "#3e4044",
+          "#5b5e63",
+          "#7b7d82",
+          "#9c9ea3",
+          "#c2c4c7",
+          "#eeeeef"
+        ]
+      },
+      "input": {
+        "role": "neutral",
+        "displayName": "Borde de campo",
+        "canonical": "#868fa1",
+        "dark": "#5b6890",
+        "oklch": "oklch(64.9% 0.029 264.4)",
+        "tonalRamp": [
+          "#080b11",
+          "#1f242f",
+          "#39404e",
+          "#555e6e",
+          "#757d8e",
+          "#979fae",
+          "#bfc4d0",
+          "#edeef2"
+        ]
+      },
+      "primary": {
+        "role": "primary",
+        "displayName": "Azul tinta de ventanilla",
+        "canonical": "#2b4a94",
+        "dark": "#93abe8",
+        "oklch": "oklch(42.8% 0.127 264.5)",
+        "tonalRamp": [
+          "#010826",
+          "#0b1f52",
+          "#1f3a7d",
+          "#3959a5",
+          "#587ac6",
+          "#7d9de1",
+          "#acc4f6",
+          "#e6efff"
+        ]
+      },
+      "primary-foreground": {
+        "role": "primary",
+        "displayName": "Texto sobre azul tinta",
+        "canonical": "#ffffff",
+        "dark": "#0f1524",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#7d7d7d",
+          "#9e9e9e",
+          "#c4c4c4",
+          "#eeeeee"
+        ]
+      },
+      "secondary": {
+        "role": "primary",
+        "displayName": "Azul velado",
+        "canonical": "#eaeef7",
+        "dark": "#1f2a45",
+        "oklch": "oklch(94.9% 0.013 266.7)",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#222429",
+          "#3d4046",
+          "#5a5e65",
+          "#7a7d85",
+          "#9b9ea5",
+          "#c2c4c9",
+          "#eeeef0"
+        ]
+      },
+      "secondary-foreground": {
+        "role": "primary",
+        "displayName": "Marino de texto",
+        "canonical": "#1f3266",
+        "dark": "#d5def5",
+        "oklch": "oklch(33.2% 0.095 266.3)",
+        "tonalRamp": [
+          "#04091f",
+          "#132147",
+          "#2a3d6e",
+          "#455b93",
+          "#647cb4",
+          "#879ed1",
+          "#b3c4e9",
+          "#e9effb"
+        ]
+      },
+      "accent": {
+        "role": "neutral",
+        "displayName": "Gris azulado de hover",
+        "canonical": "#eef1f7",
+        "dark": "#1f2a45",
+        "oklch": "oklch(95.8% 0.009 264.5)",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#222427",
+          "#3e4044",
+          "#5b5e63",
+          "#7b7d82",
+          "#9c9ea3",
+          "#c2c4c7",
+          "#eeeeef"
+        ]
+      },
+      "sello": {
+        "role": "primary",
+        "displayName": "Azul de sello",
+        "canonical": "#2b4a94",
+        "dark": "#a9bdf0",
+        "oklch": "oklch(42.8% 0.127 264.5)",
+        "tonalRamp": [
+          "#010826",
+          "#0b1f52",
+          "#1f3a7d",
+          "#3959a5",
+          "#587ac6",
+          "#7d9de1",
+          "#acc4f6",
+          "#e6efff"
+        ]
+      },
+      "nuevo": {
+        "role": "secondary",
+        "displayName": "Salmón empolvado",
+        "canonical": "#c9876f",
+        "dark": "#d9a08b",
+        "oklch": "oklch(68.4% 0.089 40.8)",
+        "tonalRamp": [
+          "#1a0400",
+          "#3e1606",
+          "#632e1a",
+          "#874b35",
+          "#a96b55",
+          "#c78f7b",
+          "#e3baab",
+          "#f9ebe6"
+        ]
+      },
+      "nuevo-suave": {
+        "role": "secondary",
+        "displayName": "Salmón velado",
+        "canonical": "#f7ece7",
+        "dark": "#2a201f",
+        "oklch": "oklch(95.0% 0.014 46.2)",
+        "tonalRamp": [
+          "#0e0a09",
+          "#292320",
+          "#463e3a",
+          "#655b57",
+          "#847b77",
+          "#a59c98",
+          "#c9c3c0",
+          "#f0eeed"
+        ]
+      },
+      "nuevo-texto": {
+        "role": "secondary",
+        "displayName": "Salmón tostado",
+        "canonical": "#8a4a35",
+        "dark": "#ebbcaa",
+        "oklch": "oklch(48.2% 0.093 38.8)",
+        "tonalRamp": [
+          "#1b0300",
+          "#401506",
+          "#652d1a",
+          "#894935",
+          "#ab6a55",
+          "#c98e7b",
+          "#e5b9aa",
+          "#faebe6"
+        ]
+      },
+      "destructive": {
+        "role": "status",
+        "displayName": "Rojo de error",
+        "canonical": "#b42318",
+        "dark": "#f0897e",
+        "oklch": "oklch(50.0% 0.182 29.5)",
+        "tonalRamp": [
+          "#270000",
+          "#550000",
+          "#830000",
+          "#ad1a10",
+          "#d14839",
+          "#ee7564",
+          "#ffa99b",
+          "#ffe6e1"
+        ]
+      },
+      "error-suave": {
+        "role": "status",
+        "displayName": "Rojo velado",
+        "canonical": "#fbecea",
+        "dark": "#2c1918",
+        "oklch": "oklch(95.4% 0.017 26.6)",
+        "tonalRamp": [
+          "#0f0a09",
+          "#2a2221",
+          "#483d3b",
+          "#675a59",
+          "#877a78",
+          "#a79b9a",
+          "#cac2c1",
+          "#f0eeed"
+        ]
+      },
+      "exito": {
+        "role": "status",
+        "displayName": "Verde registro",
+        "canonical": "#2f6b4f",
+        "dark": "#7cc4a0",
+        "oklch": "oklch(47.9% 0.078 161.1)",
+        "tonalRamp": [
+          "#001006",
+          "#002d1a",
+          "#114b33",
+          "#2f6b4f",
+          "#528b6f",
+          "#7aab91",
+          "#abcebb",
+          "#e6f2eb"
+        ]
+      },
+      "exito-suave": {
+        "role": "status",
+        "displayName": "Verde velado",
+        "canonical": "#e8f2ec",
+        "dark": "#15271f",
+        "oklch": "oklch(95.2% 0.013 159.9)",
+        "tonalRamp": [
+          "#090c0a",
+          "#202622",
+          "#3a423d",
+          "#58605b",
+          "#77807b",
+          "#99a19c",
+          "#c0c6c2",
+          "#edefee"
+        ]
+      },
+      "alerta": {
+        "role": "status",
+        "displayName": "Ámbar de aviso",
+        "canonical": "#85570b",
+        "dark": "#e2b45e",
+        "oklch": "oklch(49.6% 0.102 72.3)",
+        "tonalRamp": [
+          "#180600",
+          "#3a1b00",
+          "#5d3500",
+          "#805302",
+          "#a17334",
+          "#c09661",
+          "#ddbf9a",
+          "#f7ede1"
+        ]
+      },
+      "alerta-suave": {
+        "role": "status",
+        "displayName": "Ámbar velado",
+        "canonical": "#f8f0e0",
+        "dark": "#2a2214",
+        "oklch": "oklch(95.7% 0.023 84.6)",
+        "tonalRamp": [
+          "#0d0b06",
+          "#28231a",
+          "#453f33",
+          "#645d4f",
+          "#837c6f",
+          "#a49e91",
+          "#c8c4ba",
+          "#f0eeeb"
+        ]
+      },
+      "sidebar": {
+        "role": "tertiary",
+        "displayName": "Marino estructural",
+        "canonical": "#16233f",
+        "dark": "#1a2a52",
+        "oklch": "oklch(26.0% 0.056 264.1)",
+        "tonalRamp": [
+          "#060b17",
+          "#192439",
+          "#323f5c",
+          "#4e5d7e",
+          "#6d7d9e",
+          "#909fbc",
+          "#b9c4da",
+          "#ebeff6"
+        ]
+      },
+      "sidebar-foreground": {
+        "role": "tertiary",
+        "displayName": "Texto sobre marino",
+        "canonical": "#eef1f7",
+        "dark": "#e6e9f0",
+        "oklch": "oklch(95.8% 0.009 264.5)",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#222427",
+          "#3e4044",
+          "#5b5e63",
+          "#7b7d82",
+          "#9c9ea3",
+          "#c2c4c7",
+          "#eeeeef"
+        ]
+      },
+      "sidebar-muted": {
+        "role": "tertiary",
+        "displayName": "Gris sobre marino",
+        "canonical": "#aab4c9",
+        "dark": "#a7b1c6",
+        "oklch": "oklch(76.9% 0.032 265.3)",
+        "tonalRamp": [
+          "#080b12",
+          "#1e2430",
+          "#384050",
+          "#555e70",
+          "#747d90",
+          "#969fb0",
+          "#bec4d1",
+          "#eceef3"
+        ]
+      },
+      "sidebar-primary": {
+        "role": "secondary",
+        "displayName": "Salmón sobre marino",
+        "canonical": "#d9a08b",
+        "dark": "#d9a08b",
+        "oklch": "oklch(75.4% 0.075 41.1)",
+        "tonalRamp": [
+          "#180501",
+          "#3b190c",
+          "#5e3221",
+          "#814f3c",
+          "#a26f5c",
+          "#c19281",
+          "#debbaf",
+          "#f7ece7"
+        ]
+      },
+      "sidebar-accent": {
+        "role": "tertiary",
+        "displayName": "Velo sobre marino",
+        "canonical": "rgb(255 255 255 / 0.07)",
+        "dark": "rgb(255 255 255 / 0.06)"
+      },
+      "sidebar-border": {
+        "role": "tertiary",
+        "displayName": "Filete sobre marino",
+        "canonical": "rgb(255 255 255 / 0.1)",
+        "dark": "rgb(255 255 255 / 0.08)"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Frase de marca",
+        "purpose": "La frase del panel marino del acceso. Solo ahí."
+      },
+      "headline": {
+        "displayName": "Título de página",
+        "purpose": "Título de cada página y de las pantallas de acceso; 1.75rem en móvil, 2rem desde 640 px."
+      },
+      "title": {
+        "displayName": "Título de sección",
+        "purpose": "Secciones dentro de la página, en sans."
+      },
+      "body": {
+        "displayName": "Descripción",
+        "purpose": "Descripciones de página y de estado vacío, máx. 68ch."
+      },
+      "body-sm": {
+        "displayName": "Texto de tabla",
+        "purpose": "Celdas, tarjetas, ayudas y errores de campo."
+      },
+      "label": {
+        "displayName": "Etiqueta",
+        "purpose": "Etiquetas de campo y botones."
+      },
+      "label-sello": {
+        "displayName": "Etiqueta del sello",
+        "purpose": "REGISTRO / ACTUACIÓN dentro del sello. Las cabeceras de tabla usan 0.75rem 600, 0.06em, mayúsculas."
+      },
+      "cifras": {
+        "displayName": "Cifras",
+        "purpose": "Radicados, NUNC y fechas: tabulares y alineadas."
+      },
+      "marca": {
+        "displayName": "Marca LURIS",
+        "purpose": "Logotipo tipográfico; 1.125rem en la barra móvil, 1.5rem en la lateral, 1.875rem en el acceso."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-elevado",
+        "value": "0 1px 2px rgb(15 21 36 / 0.06), 0 4px 12px rgb(15 21 36 / 0.06)",
+        "dark": "0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px rgb(0 0 0 / 0.25)",
+        "purpose": "Segmento activo del selector de tema."
+      },
+      {
+        "name": "shadow-flotante",
+        "value": "0 2px 6px rgb(15 21 36 / 0.08), 0 12px 32px rgb(15 21 36 / 0.12)",
+        "dark": "0 2px 6px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.45)",
+        "purpose": "Avisos (toasts) y capas flotantes."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-salida",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Curva de salida de las animaciones del sistema."
+      },
+      {
+        "name": "animate-estampar",
+        "value": "estampar 160ms var(--ease-salida); scale(1.04) → scale(1)",
+        "purpose": "El sello de una actuación recién detectada se estampa una vez, sin desvanecer; nada bajo prefers-reduced-motion."
+      },
+      {
+        "name": "transicion-de-estado",
+        "value": "150ms colors",
+        "purpose": "Hover y activo en navegación, botones y copiar; al presionar: translateY(1px) en botones, scale(0.95–0.97) en ítems táctiles."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px",
+        "purpose": "Barra lateral, tabla en lugar de tarjetas."
+      },
+      {
+        "name": "contenido-max",
+        "value": "1152px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Una acción principal por zona: registrar, guardar, invitar.",
+      "html": "<button class=\"ds-btn-primary\">Registrar proceso</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 14px;border-radius:8px;border:1px solid transparent;font:500 0.875rem/1 \"Public Sans\",ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:background-color .15s,color .15s,transform .15s;background:var(--primary,#2b4a94);color:var(--primary-foreground,#fff);box-shadow:0 1px 2px rgb(15 21 36 / .05);} .ds-btn-primary:hover{background:color-mix(in oklab,var(--primary,#2b4a94) 90%,transparent);} .ds-btn-primary:active{transform:translateY(1px);} .ds-btn-primary:focus-visible{outline:2px solid var(--ring,#2b4a94);outline-offset:2px;box-shadow:0 0 0 3px color-mix(in oklab,var(--ring,#2b4a94) 50%,transparent);}"
+    },
+    {
+      "name": "Botón de contorno",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Acción secundaria junto a la principal.",
+      "html": "<button class=\"ds-btn-outline\">Secundaria</button>",
+      "css": ".ds-btn-outline{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 14px;border-radius:8px;border:1px solid transparent;font:500 0.875rem/1 \"Public Sans\",ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:background-color .15s,color .15s,transform .15s;background:var(--background,#f5f6f8);color:var(--foreground,#1b2233);border-color:var(--border,#e2e5eb);} .ds-btn-outline:hover{background:var(--muted,#eef0f3);} .ds-btn-outline:active{transform:translateY(1px);} .ds-btn-outline:focus-visible{outline:2px solid var(--ring,#2b4a94);outline-offset:2px;}"
+    },
+    {
+      "name": "Botón discreto destructivo",
+      "kind": "button",
+      "refersTo": "button-ghost-destructive",
+      "description": "Desactivar, cerrar sesión: aislado de las acciones frecuentes por espacio o divisor.",
+      "html": "<button class=\"ds-btn-ghost-destructive\">Desactivar</button>",
+      "css": ".ds-btn-ghost-destructive{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 14px;border-radius:8px;border:1px solid transparent;font:500 0.875rem/1 \"Public Sans\",ui-sans-serif,system-ui,sans-serif;cursor:pointer;transition:background-color .15s,color .15s,transform .15s;background:transparent;color:var(--destructive,#b42318);} .ds-btn-ghost-destructive:hover{background:var(--error-suave,#fbecea);} .ds-btn-ghost-destructive:focus-visible{outline:2px solid var(--ring,#2b4a94);outline-offset:2px;}"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Etiqueta arriba, ayuda o errores debajo enlazados por aria-describedby.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Radicado</span><input class=\"ds-input\" placeholder=\"23 números\" /></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:6px;font-family:\"Public Sans\",ui-sans-serif,system-ui,sans-serif;} .ds-field-label{font-size:.875rem;font-weight:500;color:var(--foreground,#1b2233);} .ds-input{height:40px;width:100%;border-radius:8px;border:1px solid var(--input,#868fa1);background:var(--background,#f5f6f8);color:var(--foreground,#1b2233);padding:0 12px;font-size:.875rem;transition:border-color .15s,box-shadow .15s;outline:none;} .ds-input::placeholder{color:var(--muted-foreground,#565f71);} .ds-input:focus-visible{border-color:var(--ring,#2b4a94);box-shadow:0 0 0 3px color-mix(in oklab,var(--ring,#2b4a94) 50%,transparent);} .ds-input[aria-invalid=true]{border-color:var(--destructive,#b42318);box-shadow:0 0 0 3px color-mix(in oklab,var(--destructive,#b42318) 20%,transparent);}"
+    },
+    {
+      "name": "Sello de fecha oficial",
+      "kind": "custom",
+      "refersTo": "sello-de-fecha",
+      "description": "Solo para la fecha de registro o de actuación que dio la plataforma; se estampa una vez cuando es nueva.",
+      "html": "<span class=\"ds-sello\"><span class=\"ds-sello-etiqueta\">Registro</span><time class=\"ds-sello-fecha\" datetime=\"2026-11-13\">13/11/2026</time></span>",
+      "css": ".ds-sello{display:inline-flex;flex-direction:column;align-items:center;border:1.5px solid var(--sello,#2b4a94);outline:1px solid color-mix(in oklab,var(--sello,#2b4a94) 60%,transparent);outline-offset:2px;border-radius:3px;padding:4px 10px;line-height:1;color:var(--sello,#2b4a94);font-family:\"Public Sans\",ui-sans-serif,system-ui,sans-serif;animation:ds-estampar 160ms cubic-bezier(.16,1,.3,1);} .ds-sello-etiqueta{font-size:.65625rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;} .ds-sello-fecha{margin-top:4px;font-size:.875rem;font-weight:600;font-variant-numeric:tabular-nums lining-nums;letter-spacing:.01em;} @keyframes ds-estampar{from{transform:scale(1.04)}to{transform:scale(1)}} @media (prefers-reduced-motion:reduce){.ds-sello{animation:none}}"
+    },
+    {
+      "name": "Radicado copiable",
+      "kind": "custom",
+      "refersTo": "radicado-copiable",
+      "description": "Dígitos continuos en cifras tabulares, sin cortes, con botón de copiar y confirmación «Radicado copiado».",
+      "html": "<span class=\"ds-radicado\"><span class=\"ds-radicado-digitos\">11001310300120230012300</span><button class=\"ds-radicado-copiar\" aria-label=\"Copiar radicado 11001310300120230012300\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect width=\"14\" height=\"14\" x=\"8\" y=\"8\" rx=\"2\"/><path d=\"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2\"/></svg></button></span>",
+      "css": ".ds-radicado{display:inline-flex;align-items:center;gap:6px;font-family:\"Public Sans\",ui-sans-serif,system-ui,sans-serif;} .ds-radicado-digitos{font-size:.875rem;white-space:nowrap;user-select:all;color:var(--foreground,#1b2233);font-variant-numeric:tabular-nums lining-nums;letter-spacing:.01em;} .ds-radicado-copiar{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:6.4px;border:1px solid transparent;background:transparent;color:var(--muted-foreground,#565f71);cursor:pointer;transition:color .15s,background-color .15s,border-color .15s;} .ds-radicado-copiar:hover{border-color:var(--border,#e2e5eb);background:var(--card,#fff);color:var(--primary,#2b4a94);} .ds-radicado-copiar:active{transform:scale(.95);} .ds-radicado-copiar:focus-visible{outline:2px solid var(--ring,#2b4a94);outline-offset:2px;}"
+    },
+    {
+      "name": "Fila de actuación nueva",
+      "kind": "card",
+      "refersTo": "fila-nueva",
+      "description": "Tarjeta móvil de una actuación: lo nuevo cambia el borde a salmón y antepone «Nueva ·».",
+      "html": "<article class=\"ds-actuacion\"><div class=\"ds-actuacion-cab\"><div><p class=\"ds-actuacion-alias\">Restitución de inmueble arrendado</p><p class=\"ds-actuacion-desc\"><span class=\"ds-nueva\">Nueva · </span>Auto admite demanda</p></div><span class=\"ds-sello\"><span class=\"ds-sello-etiqueta\">Registro</span><time class=\"ds-sello-fecha\">13/11/2026</time></span></div><div class=\"ds-actuacion-pie\"><span class=\"ds-radicado-digitos\">11001310300120230012300</span><span class=\"ds-actuacion-plat\">Rama Judicial</span></div></article>",
+      "css": ".ds-actuacion{display:flex;flex-direction:column;gap:12px;border-radius:11.2px;border:1px solid color-mix(in oklab,var(--nuevo,#c9876f) 50%,transparent);background:var(--card,#fff);padding:16px;font-family:\"Public Sans\",ui-sans-serif,system-ui,sans-serif;font-size:.875rem;} .ds-actuacion-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;} .ds-actuacion-alias{margin:0;font-weight:600;color:var(--foreground,#1b2233);} .ds-actuacion-desc{margin:0;color:var(--muted-foreground,#565f71);} .ds-nueva{font-weight:600;color:var(--nuevo-texto,#8a4a35);} .ds-actuacion-pie{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:1px solid var(--border,#e2e5eb);padding-top:12px;} .ds-actuacion-plat{font-size:.75rem;color:var(--muted-foreground,#565f71);} .ds-sello{display:inline-flex;flex-direction:column;align-items:center;border:1.5px solid var(--sello,#2b4a94);outline:1px solid color-mix(in oklab,var(--sello,#2b4a94) 60%,transparent);outline-offset:2px;border-radius:3px;padding:4px 10px;line-height:1;color:var(--sello,#2b4a94);} .ds-sello-etiqueta{font-size:.65625rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;} .ds-sello-fecha{margin-top:4px;font-weight:600;font-variant-numeric:tabular-nums lining-nums;} .ds-radicado-digitos{white-space:nowrap;font-variant-numeric:tabular-nums lining-nums;letter-spacing:.01em;}"
+    },
+    {
+      "name": "Barra lateral",
+      "kind": "nav",
+      "refersTo": "nav-lateral",
+      "description": "Estructura marina de 256 px desde 1024 px; activo con velo blanco y barra salmón de 2 px.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Principal\"><p class=\"ds-nav-marca\">LURIS</p><p class=\"ds-nav-contexto\">Despacho Demo</p><a class=\"ds-nav-item\" aria-current=\"page\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"/><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/></svg>Inicio</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2\"/></svg>Procesos</a></nav>",
+      "css": ".ds-nav{display:flex;flex-direction:column;gap:2px;width:256px;background:var(--sidebar,#16233f);color:var(--sidebar-foreground,#eef1f7);padding:28px 12px 16px;font-family:\"Public Sans\",ui-sans-serif,system-ui,sans-serif;} .ds-nav-marca{margin:0 12px;font:600 1.5rem/1 \"Source Serif 4\",ui-serif,Georgia,serif;letter-spacing:.16em;} .ds-nav-contexto{margin:4px 12px 24px;font-size:.875rem;color:var(--sidebar-muted,#aab4c9);} .ds-nav-item{position:relative;display:flex;align-items:center;gap:12px;height:40px;padding:0 12px;border-radius:6.4px;font-size:.9375rem;color:var(--sidebar-muted,#aab4c9);text-decoration:none;transition:background-color .15s,color .15s;} .ds-nav-item:hover{background:rgb(255 255 255 / .07);color:var(--sidebar-foreground,#eef1f7);} .ds-nav-item[aria-current=page]{background:rgb(255 255 255 / .07);color:#fff;font-weight:600;} .ds-nav-item[aria-current=page]::before{content:\"\";position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:9999px;background:var(--sidebar-primary,#d9a08b);} .ds-nav-item:focus-visible{outline:2px solid var(--sidebar-ring,#d9a08b);outline-offset:2px;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Sello de radicación",
+    "overview": "LURIS se presenta como la ventanilla de un juzgado bien llevada: papel blanco, grises fríos, una estructura en azul marino profundo y, sobre cada actuación, el sello fechador que dice cuándo la plataforma oficial la registró. La fecha oficial es la prueba, y el sistema entero está organizado para que esa prueba se lea primero. La jerarquía se construye por aparato (sello de doble filete, cifras tabulares, fila resaltada) y no por tamaño: los títulos son sobrios, las tablas densas y estables, y el color se raciona.\n\nEl tono es formal y elegante, corporativo y nunca estridente. Los colores se apagaron a pedido del usuario: el azul rey es un azul tinta (#2B4A94), el salmón es empolvado y aparece solo donde algo es nuevo. Rechaza explícitamente el panel SaaS de tarjetas de métricas genéricas donde todas las fechas pesan igual, y los colores \"chillones\".\n\nLa densidad es de herramienta de trabajo: quien revisa cientos de procesos necesita filas con columnas fijas, radicados copiables con un clic y fechas que se alinean. El movimiento es mínimo: el sello se \"estampa\" una vez al aparecer y todo lo demás cambia de color sin desplazarse.",
+    "keyCharacteristics": [
+      "Papel blanco y grises fríos con estructura en azul marino; ningún color saturado.",
+      "Sello de fecha oficial de doble filete azul como única marca visual del sistema.",
+      "Salmón empolvado reservado a lo nuevo y al indicador activo de la barra lateral.",
+      "Títulos en serif de texto (Source Serif 4); interfaz en sans humanista (Public Sans); cifras tabulares en radicados y fechas.",
+      "Superficies planas con filete de 1 px; sombra solo en capas flotantes.",
+      "Claro y oscuro con los mismos roles; todos los pares de texto ≥4,5:1 y bordes de campo ≥3:1 en ambos temas."
+    ],
+    "rules": [
+      {
+        "name": "The Salmón Solo Para Lo Nuevo Rule",
+        "section": "colors",
+        "body": "El salmón (nuevo, nuevo-suave, nuevo-texto, sidebar-primary) solo marca una actuación nueva o el destino activo de la barra lateral. Nunca un botón, una insignia decorativa, un gráfico ni un título."
+      },
+      {
+        "name": "The Sello Es Prueba Rule",
+        "section": "colors",
+        "body": "El azul de sello y el doble filete se usan exclusivamente para fechas oficiales de la plataforma (fecha de registro, fecha de actuación). Nunca para la fecha de detección de LURIS, nunca como adorno."
+      },
+      {
+        "name": "The Marino Es Estructura Rule",
+        "section": "colors",
+        "body": "El marino (sidebar) solo viste estructura: la barra lateral y el panel de marca del acceso. El contenido vive sobre papel."
+      },
+      {
+        "name": "The Cifras Tabulares Rule",
+        "section": "typography",
+        "body": "Todo radicado, NUNC y fecha lleva `tabular-nums lining-nums` con 0.01em de espaciado, sin guiones, sin espacios y sin cortes de línea."
+      },
+      {
+        "name": "The Serif Con Mesura Rule",
+        "section": "typography",
+        "body": "La serif es para títulos de página, títulos de estado vacío, la marca y la frase del acceso. Secciones, tablas y controles van en sans."
+      },
+      {
+        "name": "The Columnas Fijas Rule",
+        "section": "layout",
+        "body": "Las columnas de una tabla nunca se reordenan ni se ocultan según el estado: lo nuevo solo cambia el estilo de la fila (fondo nuevo-suave, prefijo \"Nueva ·\", sello que se estampa)."
+      },
+      {
+        "name": "The Plano Con Filete Rule",
+        "section": "elevation",
+        "body": "En reposo, todo es plano y se separa con un filete de 1 px. La sombra se gana flotando, no decorando."
+      },
+      {
+        "name": "The Destructivo Aislado Rule",
+        "section": "components",
+        "body": "Una acción destructiva es un botón discreto separado de las acciones frecuentes por espacio o un divisor; nunca un botón relleno, nunca junto a la acción principal."
+      }
+    ],
+    "dos": [
+      "Do mostrar toda fecha de registro y de actuación con el sello de fecha oficial, en dd/mm/aaaa y zona America/Bogota.",
+      "Do mostrar cada radicado y NUNC como dígitos continuos en cifras tabulares, sin cortes de línea, con su botón de copiar al lado.",
+      "Do marcar lo nuevo cambiando el estilo de la fila (nuevo-suave, prefijo \"Nueva ·\" en nuevo-texto, borde salmón en tarjeta), nunca moviendo columnas.",
+      "Do usar los tokens de rol (`primary`, `sello`, `nuevo`, `sidebar`…) en vez de valores directos, para que el tema oscuro funcione sin cambios.",
+      "Do mantener todo par de texto en ≥4,5:1 y todo borde de campo en ≥3:1, en claro y en oscuro.",
+      "Do aislar las acciones destructivas como botones discretos separados por espacio o un divisor.",
+      "Do convertir tablas en tarjetas por debajo de 1024 px y respetar el área segura en las barras móviles."
+    ],
+    "donts": [
+      "Don't usar el sello ni el doble filete azul como adorno, como insignia o para la fecha en que LURIS detectó algo.",
+      "Don't usar el salmón para botones, insignias, gráficos, títulos o cualquier cosa que no sea lo nuevo o el destino activo de la barra lateral.",
+      "Don't introducir colores saturados o \"chillones\"; la paleta es papel, tinta, marino, azul tinta y salmón empolvado.",
+      "Don't construir paneles de tarjetas de métricas genéricas donde todas las fechas pesan igual.",
+      "Don't poner etiquetas en mayúsculas espaciadas sobre los títulos (eyebrows); las mayúsculas pequeñas viven solo en la etiqueta del sello y en las cabeceras de tabla.",
+      "Don't dar sombra a tarjetas en reposo; la sombra es para lo que flota.",
+      "Don't colocar una acción destructiva rellena o pegada a la acción principal."
+    ]
+  }
+}

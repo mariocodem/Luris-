@@ -11,7 +11,7 @@ export default function NoEncontrado() {
       titulo="No encontramos esta página"
       descripcion="Puede que el enlace esté incompleto o que la página ya no exista. Revisa la dirección o vuelve al inicio."
       acciones={
-        <Button asChild>
+        <Button size="lg" asChild>
           <Link href="/">Ir al inicio</Link>
         </Button>
       }

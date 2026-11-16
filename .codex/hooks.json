@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ ! -f '/home/solary/.agents/skills/impeccable/scripts/impeccable' ] || '/home/solary/.agents/skills/impeccable/scripts/impeccable' hook",
-            "commandWindows": "cmd /c if exist \"\\home\\solary\\.agents\\skills\\impeccable\\scripts\\impeccable.cmd\" \"\\home\\solary\\.agents\\skills\\impeccable\\scripts\\impeccable.cmd\" hook",
+            "command": "\".agents/skills/impeccable/scripts/impeccable\" hook",
+            "commandWindows": "cmd /c if exist \".agents\\skills\\impeccable\\scripts\\impeccable.cmd\" \".agents\\skills\\impeccable\\scripts\\impeccable.cmd\" hook",
             "timeout": 5,
             "statusMessage": "Checking UI changes"
           }
@@ -19,8 +19,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "[ ! -f '/home/solary/.agents/skills/impeccable/scripts/impeccable' ] || '/home/solary/.agents/skills/impeccable/scripts/impeccable' hook",
-            "commandWindows": "cmd /c if exist \"\\home\\solary\\.agents\\skills\\impeccable\\scripts\\impeccable.cmd\" \"\\home\\solary\\.agents\\skills\\impeccable\\scripts\\impeccable.cmd\" hook",
+            "command": "\".agents/skills/impeccable/scripts/impeccable\" hook",
+            "commandWindows": "cmd /c if exist \".agents\\skills\\impeccable\\scripts\\impeccable.cmd\" \".agents\\skills\\impeccable\\scripts\\impeccable.cmd\" hook",
             "timeout": 30,
             "statusMessage": "Design deep pass"
           }

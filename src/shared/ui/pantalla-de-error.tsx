@@ -23,8 +23,10 @@ export function PantallaDeError({ error, retry }: PropsPantallaDeError) {
       codigoDeAyuda={obtenerCodigoDeAyuda(error)}
       acciones={
         <>
-          <Button onClick={retry}>Intentar de nuevo</Button>
-          <Button variant="outline" asChild>
+          <Button size="lg" onClick={retry}>
+            Intentar de nuevo
+          </Button>
+          <Button size="lg" variant="outline" asChild>
             <Link href="/">Ir al inicio</Link>
           </Button>
         </>

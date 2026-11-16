@@ -145,6 +145,8 @@ model Despacho {
   actualizadoEn DateTime       @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 
   membresias         Membresia[]
+  invitaciones       Invitacion[]
+  sesionesActivas    Sesion[]
   procesos           Proceso[]
   etiquetas          Etiqueta[]
   registrosAuditoria RegistroAuditoria[]
@@ -165,10 +167,103 @@ model Usuario {
   creadoEn        DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn   DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 
-  membresias         Membresia[]
-  registrosAuditoria RegistroAuditoria[]
+  membresias           Membresia[]
+  sesiones             Sesion[]
+  cuentas              Cuenta[]
+  invitacionesEnviadas Invitacion[]
+  registrosAuditoria   RegistroAuditoria[]
 
   @@map("usuarios")
+}
+
+// ─── Autenticación (Better Auth) ──────────────────────────────────────────────
+// Tablas propias de la autenticación: no son datos de negocio y el cliente de un despacho no
+// puede leerlas ni escribirlas. Los nombres de modelo y campo se mapean en la configuración de
+// Better Auth (src/modules/usuarios/infrastructure/autenticacion).
+
+/// Sesión iniciada en un navegador. El token es opaco; Better Auth lo firma en la cookie.
+model Sesion {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  token            String   @unique @db.VarChar(255)
+  expiraEn         DateTime @map("expira_en") @db.Timestamptz(3)
+  direccionIp      String?  @map("direccion_ip") @db.VarChar(45)
+  agenteDeUsuario  String?  @map("agente_de_usuario") @db.VarChar(1000)
+  usuarioId        String   @map("usuario_id") @db.Uuid
+  /// Despacho en el que trabaja la sesión (organización activa de Better Auth).
+  despachoActivoId String?  @map("despacho_activo_id") @db.Uuid
+  creadoEn         DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn    DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  usuario        Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  despachoActivo Despacho? @relation(fields: [despachoActivoId], references: [id], onDelete: SetNull)
+
+  @@index([usuarioId])
+  @@index([despachoActivoId])
+  @@map("sesiones")
+}
+
+/// Forma de autenticarse de un usuario. En LURIS solo existe la de correo y contraseña
+/// (proveedor "credential"); la contraseña se guarda con hash (scrypt), nunca en claro.
+model Cuenta {
+  id                 String    @id @default(uuid(7)) @db.Uuid
+  idEnProveedor      String    @map("id_en_proveedor") @db.VarChar(255)
+  proveedor          String    @db.VarChar(50)
+  usuarioId          String    @map("usuario_id") @db.Uuid
+  tokenDeAcceso      String?   @map("token_de_acceso")
+  tokenDeRenovacion  String?   @map("token_de_renovacion")
+  tokenDeIdentidad   String?   @map("token_de_identidad")
+  accesoExpiraEn     DateTime? @map("acceso_expira_en") @db.Timestamptz(3)
+  renovacionExpiraEn DateTime? @map("renovacion_expira_en") @db.Timestamptz(3)
+  alcance            String?
+  contrasenaHash     String?   @map("contrasena_hash")
+  creadoEn           DateTime  @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn      DateTime  @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([proveedor, idEnProveedor])
+  @@index([usuarioId])
+  @@map("cuentas")
+}
+
+/// Valores de un solo uso de Better Auth (p. ej. el token de recuperación de contraseña).
+model Verificacion {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  identificador String   @db.VarChar(255)
+  valor         String
+  expiraEn      DateTime @map("expira_en") @db.Timestamptz(3)
+  creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  @@index([identificador])
+  @@map("verificaciones")
+}
+
+/// Invitación a un despacho (§5): enlace de un solo uso con vencimiento.
+/// Compatible con la tabla "invitation" del plugin de organizaciones de Better Auth.
+model Invitacion {
+  id            String    @id @default(uuid(7)) @db.Uuid
+  despachoId    String    @map("despacho_id") @db.Uuid
+  /// Siempre en minúsculas (restricción CHECK).
+  email         String    @db.VarChar(320)
+  /// administrador | abogado | asistente (restricción CHECK).
+  rol           String    @db.VarChar(20)
+  /// pending | accepted | canceled | rejected (valores de Better Auth, restricción CHECK).
+  estado        String    @default("pending") @db.VarChar(20)
+  expiraEn      DateTime  @map("expira_en") @db.Timestamptz(3)
+  invitadoPorId String    @map("invitado_por_id") @db.Uuid
+  /// SHA-256 del token del enlace. El token en claro solo viaja en el correo.
+  tokenHash     String    @unique @map("token_hash") @db.Char(64)
+  aceptadaEn    DateTime? @map("aceptada_en") @db.Timestamptz(3)
+  creadoEn      DateTime  @default(now()) @map("creado_en") @db.Timestamptz(3)
+
+  despacho    Despacho @relation(fields: [despachoId], references: [id], onDelete: Cascade)
+  invitadoPor Usuario  @relation(fields: [invitadoPorId], references: [id], onDelete: Cascade)
+
+  @@unique([id, despachoId])
+  @@index([despachoId, estado])
+  @@index([email])
+  @@map("invitaciones")
 }
 
 /// Pertenencia de un usuario a un despacho, con su rol.

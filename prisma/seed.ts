@@ -6,7 +6,7 @@
  *
  * Los datos de negocio se crean con el cliente aislado del despacho, igual que en la app.
  */
-import { obtenerDependencias } from '@/composition-root';
+import { obtenerBetterAuth, obtenerDependencias } from '@/composition-root';
 import type { CodigoPlataforma, TipoAsignacion } from '@/generated/prisma/client';
 import type { RolDeDespacho } from '@/modules/usuarios/domain/rol-de-despacho';
 import { crearNunc } from '@/shared/domain/nunc';
@@ -153,6 +153,22 @@ const PROCESOS: readonly ProcesoDeEjemplo[] = [
   },
 ];
 
+/**
+ * Contraseña de DESARROLLO para todos los usuarios de ejemplo (ver README). Se guarda con el
+ * mismo hash de Better Auth que usa la aplicación.
+ */
+const CONTRASENA_DE_DESARROLLO = 'LurisDemo2026';
+
+async function asegurarContrasena(usuarioId: string): Promise<void> {
+  const contexto = await obtenerBetterAuth().$context;
+  const hash = await contexto.password.hash(CONTRASENA_DE_DESARROLLO);
+  await prisma.cuenta.upsert({
+    where: { proveedor_idEnProveedor: { proveedor: 'credential', idEnProveedor: usuarioId } },
+    create: { usuarioId, proveedor: 'credential', idEnProveedor: usuarioId, contrasenaHash: hash },
+    update: { contrasenaHash: hash },
+  });
+}
+
 function exigir<T>(resultado: Result<T, { mensajeUsuario: string }>, contexto: string): T {
   if (!resultado.ok) throw new Error(`${contexto}: ${resultado.error.mensajeUsuario}`);
   return resultado.value;
@@ -179,6 +195,7 @@ async function sembrar(): Promise<void> {
       update: { nombre: datos.nombre, esSuperadmin },
     });
     usuarioIds[clave] = usuario.id;
+    await asegurarContrasena(usuario.id);
   }
 
   // ─── Datos del despacho (con el cliente aislado, como en la app) ───

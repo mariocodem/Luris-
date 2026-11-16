@@ -82,16 +82,34 @@ SQL crudas, y no permite navegar desde un usuario hacia otros despachos. Además
 foráneas compuestas `(padreId, despachoId)` hacen que la propia base rechace relaciones entre
 despachos. Usa siempre claves foráneas escalares (`procesoId`, no `proceso: { connect }`).
 
-**Datos de ejemplo** (`pnpm db:seed`): despacho `despacho-demo` y estos usuarios (todavía sin
-contraseña; la autenticación llega en la Fase 2):
+**Datos de ejemplo** (`pnpm db:seed`): despacho `despacho-demo` y estos usuarios. Todos usan la
+contraseña de **desarrollo** `LurisDemo2026` (la semilla no se ejecuta en producción):
 
-| Usuario                             | Rol                         |
-| ----------------------------------- | --------------------------- |
-| `superadmin@luris.test`             | Superadmin (operador LURIS) |
-| `administradora@despacho-demo.test` | Administradora del despacho |
-| `abogado@despacho-demo.test`        | Abogado                     |
-| `abogada@despacho-demo.test`        | Abogada                     |
-| `asistente@despacho-demo.test`      | Asistente                   |
+| Usuario                             | Rol                         | Entra a                        |
+| ----------------------------------- | --------------------------- | ------------------------------ |
+| `superadmin@luris.test`             | Superadmin (operador LURIS) | `/plataforma/despachos`        |
+| `administradora@despacho-demo.test` | Administradora del despacho | `/inicio`, `/ajustes/usuarios` |
+| `abogado@despacho-demo.test`        | Abogado                     | `/inicio`                      |
+| `abogada@despacho-demo.test`        | Abogada                     | `/inicio`                      |
+| `asistente@despacho-demo.test`      | Asistente                   | `/inicio`                      |
+
+## Autenticación, roles y permisos
+
+- **Better Auth** (correo y contraseña + plugin de organizaciones: despacho = organización,
+  membresía = miembro) mapeado a las tablas en español. Configuración en
+  [better-auth.ts](src/modules/usuarios/infrastructure/autenticacion/better-auth.ts).
+- **No hay registro abierto ni rutas `/api/auth`**: las cuentas nacen por invitación y todo pasa
+  por server actions → casos de uso, que verifican la matriz de permisos del §5
+  ([permisos.ts](src/modules/usuarios/domain/permisos.ts), probada celda por celda).
+- **Invitaciones**: enlace de un solo uso que vence a las `INVITACION_HORAS_VIGENCIA` horas; en la
+  base solo se guarda el SHA-256 del token.
+- **Cada petición** vuelve a verificar que la membresía siga activa y el despacho no esté
+  suspendido: desactivar una cuenta o suspender un despacho surte efecto de inmediato.
+- **Correos en desarrollo**: con `CORREO_TRANSPORTE=archivo` cada correo (invitación,
+  recuperación) se guarda como `.html` en `.correos/` para abrirlo en el navegador. Esa carpeta
+  contiene enlaces de acceso y está en `.gitignore`. En producción se exige SMTP (Fase 11).
+- **Auditoría**: inicios y cierres de sesión, intentos fallidos, invitaciones, cambios de rol,
+  desactivaciones y cambios de estado de despachos quedan en `registros_auditoria`.
 
 ## Pruebas
 
@@ -100,12 +118,25 @@ contraseña; la autenticación llega en la Fase 2):
   base `<DATABASE_URL>_test`, le aplica todas las migraciones y verifica el aislamiento entre
   despachos y las restricciones del esquema. Requiere `pnpm db:up`.
 
-## Componentes de interfaz (21st.dev / shadcn)
+## Sistema de diseño
 
-Los componentes se instalan en `src/shared/ui/components` (configurado en `components.json`):
+Mundo visual **«Sello de radicación»**: papel blanco y grises fríos, azul marino para la
+estructura, azul rey apagado para acciones y sellos, salmón empolvado solo para lo nuevo. La
+referencia completa está en [DESIGN.md](DESIGN.md); el contexto del producto, en
+[PRODUCT.md](PRODUCT.md).
+
+- **Tokens**: variables CSS en [globals.css](src/app/globals.css) (tema claro y `.dark`).
+- **Tipografía**: Public Sans (interfaz) y Source Serif 4 (títulos); clase `cifras` para
+  radicados y fechas.
+- **Tema**: claro / oscuro / sistema con `next-themes`, sin parpadeo.
+- **Shell**: barra lateral desde 1024 px; en móvil y tableta, barra superior y menú inferior.
+- **Componentes propios**: `SelloDeFecha` (solo fechas oficiales), `RadicadoCopiable`,
+  `Encabezado`, `EstadoVacio`, `Campo`; avisos con `sonner`.
+- **Catálogo**: `/dev/componentes` (solo en desarrollo) muestra todo en ambos temas.
+
+Los componentes base se instalan en `src/shared/ui/components` (configurado en
+`components.json`) y se adaptan a los tokens:
 
 ```bash
-pnpm dlx shadcn@latest add "<url del componente en 21st.dev>"
+pnpm exec shadcn add <componente>
 ```
-
-Después de instalar un componente, adáptalo a los tokens de diseño del proyecto.

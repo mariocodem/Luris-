@@ -41,6 +41,7 @@ const PERMITIDAS: Record<Clasificacion, readonly string[]> = {
   NEGOCIO_SOLO_AGREGAR: OPERACIONES.filter((o) => !/update|delete|upsert/.test(o)),
   DESPACHO_PROPIO: OPERACIONES.filter((o) => !/create|delete|upsert/.test(o)),
   USUARIO_DEL_DESPACHO: OPERACIONES.filter((o) => !/create|delete|upsert/.test(o)),
+  AUTENTICACION: [],
 };
 
 const EJEMPLO: Record<Clasificacion, { modelo: Modelo; datos: Record<string, unknown> }> = {
@@ -48,6 +49,7 @@ const EJEMPLO: Record<Clasificacion, { modelo: Modelo; datos: Record<string, unk
   NEGOCIO_SOLO_AGREGAR: { modelo: 'RegistroAuditoria', datos: { accion: 'x' } },
   DESPACHO_PROPIO: { modelo: 'Despacho', datos: { nombre: 'x' } },
   USUARIO_DEL_DESPACHO: { modelo: 'Usuario', datos: { nombre: 'x' } },
+  AUTENTICACION: { modelo: 'Cuenta', datos: { proveedor: 'credential' } },
 };
 
 describe('matriz de operaciones por clasificación', () => {

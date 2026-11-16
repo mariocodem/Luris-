@@ -25,11 +25,23 @@ type MapaDeRelaciones = {
 export const RELACIONES: MapaDeRelaciones = {
   Despacho: {
     membresias: 'Membresia',
+    invitaciones: 'Invitacion',
+    sesionesActivas: 'Sesion',
     procesos: 'Proceso',
     etiquetas: 'Etiqueta',
     registrosAuditoria: 'RegistroAuditoria',
   },
-  Usuario: { membresias: 'Membresia', registrosAuditoria: 'RegistroAuditoria' },
+  Usuario: {
+    membresias: 'Membresia',
+    sesiones: 'Sesion',
+    cuentas: 'Cuenta',
+    invitacionesEnviadas: 'Invitacion',
+    registrosAuditoria: 'RegistroAuditoria',
+  },
+  Sesion: { usuario: 'Usuario', despachoActivo: 'Despacho' },
+  Cuenta: { usuario: 'Usuario' },
+  Verificacion: {},
+  Invitacion: { despacho: 'Despacho', invitadoPor: 'Usuario' },
   Membresia: {
     despacho: 'Despacho',
     usuario: 'Usuario',
@@ -69,14 +81,20 @@ export const RELACIONES: MapaDeRelaciones = {
  * - NEGOCIO_SOLO_AGREGAR: como NEGOCIO, pero solo admite lecturas y creaciones (auditoría).
  * - DESPACHO_PROPIO: la fila del propio despacho (filtro por `id`).
  * - USUARIO_DEL_DESPACHO: usuarios globales, visibles solo si tienen membresía en el despacho.
+ * - AUTENTICACION: sesiones, cuentas (contraseñas) y verificaciones. El cliente de un despacho
+ *   no puede tocarlas de ninguna forma; solo las usa Better Auth con el cliente sin aislamiento.
  */
 export type Clasificacion =
-  'NEGOCIO' | 'NEGOCIO_SOLO_AGREGAR' | 'DESPACHO_PROPIO' | 'USUARIO_DEL_DESPACHO';
+  'NEGOCIO' | 'NEGOCIO_SOLO_AGREGAR' | 'DESPACHO_PROPIO' | 'USUARIO_DEL_DESPACHO' | 'AUTENTICACION';
 
 export const CLASIFICACION: Readonly<Record<Modelo, Clasificacion>> = {
   Despacho: 'DESPACHO_PROPIO',
   Usuario: 'USUARIO_DEL_DESPACHO',
+  Sesion: 'AUTENTICACION',
+  Cuenta: 'AUTENTICACION',
+  Verificacion: 'AUTENTICACION',
   Membresia: 'NEGOCIO',
+  Invitacion: 'NEGOCIO',
   Proceso: 'NEGOCIO',
   AsignacionProceso: 'NEGOCIO',
   Etiqueta: 'NEGOCIO',

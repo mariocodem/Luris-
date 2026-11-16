@@ -22,7 +22,7 @@ export class AppError extends Error {
   readonly codigo: string;
   readonly mensajeUsuario: string;
   readonly detalleTecnico: string | undefined;
-  readonly codigoDeAyuda: string;
+  #codigoDeAyuda: string | undefined;
 
   constructor(datos: DatosAppError) {
     super(datos.detalleTecnico ?? datos.codigo, { cause: datos.causa });
@@ -30,7 +30,16 @@ export class AppError extends Error {
     this.codigo = datos.codigo;
     this.mensajeUsuario = datos.mensajeUsuario;
     this.detalleTecnico = datos.detalleTecnico;
-    this.codigoDeAyuda = generarCodigoDeAyuda();
+  }
+
+  /**
+   * Código corto para que la persona lo cite al pedir ayuda. Se genera la primera vez que se
+   * lee (y queda fijo): crear un error esperable no consume aleatoriedad, lo que con Cache
+   * Components evita valores aleatorios durante el prerenderizado.
+   */
+  get codigoDeAyuda(): string {
+    this.#codigoDeAyuda ??= generarCodigoDeAyuda();
+    return this.#codigoDeAyuda;
   }
 }
 

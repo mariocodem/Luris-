@@ -1,4 +1,4 @@
-import { randomInt, randomUUID } from 'node:crypto';
+import { createHash, randomInt, randomUUID } from 'node:crypto';
 import { inject } from 'vitest';
 import type { PrismaClient } from '@/generated/prisma/client';
 import { crearClientePrisma } from '@/shared/infrastructure/prisma/cliente';
@@ -54,6 +54,16 @@ export async function crearEscenarioDeDespacho(
   });
   const membresia = await prisma.membresia.create({
     data: { despachoId, usuarioId: usuario.id, rol: 'abogado' },
+  });
+  await prisma.invitacion.create({
+    data: {
+      despachoId,
+      email: `invitada-${sufijo}@pruebas.test`,
+      rol: 'asistente',
+      expiraEn: new Date(Date.now() + 86_400_000),
+      invitadoPorId: usuario.id,
+      tokenHash: createHash('sha256').update(sufijo).digest('hex'),
+    },
   });
   const proceso = await prisma.proceso.create({
     data: { despachoId, radicado, alias: `Proceso ${sufijo}` },

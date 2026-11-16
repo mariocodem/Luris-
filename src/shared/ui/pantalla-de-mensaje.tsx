@@ -9,7 +9,8 @@ interface PropsPantallaDeMensaje {
 
 /**
  * Pantalla completa para mensajes de estado (página no encontrada, errores).
- * Siempre en lenguaje humano y con al menos una acción para seguir.
+ * Siempre en lenguaje humano y con al menos una acción para seguir; nunca códigos HTTP ni
+ * mensajes técnicos (§10).
  */
 export function PantallaDeMensaje({
   titulo,
@@ -18,14 +19,19 @@ export function PantallaDeMensaje({
   acciones,
 }: PropsPantallaDeMensaje) {
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center gap-6 px-4 py-16 sm:px-6">
+    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center gap-8 px-4 py-16 sm:px-6">
+      <p className="font-serif text-xl font-semibold tracking-[0.16em]">LURIS</p>
       <div className="flex flex-col gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-balance">{titulo}</h1>
-        <p className="text-pretty text-muted-foreground">{descripcion}</p>
+        <h1 className="font-serif text-[1.75rem] leading-tight font-semibold tracking-[-0.01em] sm:text-[2rem]">
+          {titulo}
+        </h1>
+        <p className="leading-relaxed text-pretty text-muted-foreground">{descripcion}</p>
         {codigoDeAyuda ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground">
             Código de ayuda:{' '}
-            <span className="font-mono font-medium text-foreground">{codigoDeAyuda}</span>
+            <span className="cifras rounded-md border border-border bg-card px-1.5 py-0.5 font-semibold text-foreground">
+              {codigoDeAyuda}
+            </span>
           </p>
         ) : null}
       </div>

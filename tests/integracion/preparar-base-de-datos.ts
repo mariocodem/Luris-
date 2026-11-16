@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import nextEnv from '@next/env';
 import pg from 'pg';
@@ -78,9 +79,14 @@ async function recrearBaseDeDatos(url: URL): Promise<void> {
 }
 
 function aplicarMigraciones(url: URL): void {
-  const prisma = path.join(process.cwd(), 'node_modules', '.bin', 'prisma');
+  // Se ejecuta el punto de entrada JS de Prisma con el mismo Node, en lugar de
+  // node_modules/.bin/prisma: en Windows ese archivo es un script de shell que
+  // execFileSync no puede lanzar (ENOENT).
+  const prisma = createRequire(path.join(process.cwd(), 'package.json')).resolve(
+    'prisma/build/index.js',
+  );
   try {
-    execFileSync(prisma, ['migrate', 'deploy'], {
+    execFileSync(process.execPath, [prisma, 'migrate', 'deploy'], {
       env: { ...process.env, DATABASE_URL: url.toString() },
       stdio: 'pipe',
     });

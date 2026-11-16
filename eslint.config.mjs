@@ -128,5 +128,9 @@ export default defineConfig([
     'coverage/**',
     'next-env.d.ts',
     'src/generated/**',
+    // Skills de agentes de IA (impeccable, apple-design): código de terceros, no de LURIS.
+    '.agents/**',
+    '.claude/**',
+    '.codex/**',
   ]),
 ]);

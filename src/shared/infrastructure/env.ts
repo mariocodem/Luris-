@@ -17,6 +17,25 @@ const esquemaEnv = z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
       .default('info'),
     LOG_FORMAT: z.enum(['json', 'pretty']).optional(),
+    BETTER_AUTH_SECRET: z
+      .string({ error: 'Falta el secreto de sesiones (genera uno con `openssl rand -base64 32`).' })
+      .min(32, 'Debe tener al menos 32 caracteres (genera uno con `openssl rand -base64 32`).'),
+    INVITACION_HORAS_VIGENCIA: z.coerce.number().int().min(1).max(720).default(72),
+    RECUPERACION_MINUTOS_VIGENCIA: z.coerce.number().int().min(5).max(1440).default(60),
+    /**
+     * Cómo salen los correos de cuenta (invitaciones, recuperación de contraseña).
+     * - archivo: solo desarrollo; cada correo se guarda como .html en CORREO_DIRECTORIO.
+     * El adaptador SMTP llega en la Fase 11.
+     */
+    CORREO_TRANSPORTE: z.enum(['archivo']).default('archivo'),
+    CORREO_DIRECTORIO: z.string().default('.correos'),
+    CORREO_REMITENTE: z.string().default('LURIS <no-responder@luris.test>'),
+  })
+  // Hoy "archivo" es el único transporte: en producción no hay uno válido hasta la Fase 11.
+  .refine((env) => env.NODE_ENV !== 'production', {
+    path: ['CORREO_TRANSPORTE'],
+    message:
+      'El transporte "archivo" es solo para desarrollo: guardaría enlaces de acceso en disco. Configura SMTP (Fase 11).',
   })
   .transform((env) => ({
     ...env,

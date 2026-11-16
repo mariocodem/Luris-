@@ -11,6 +11,15 @@ next-env.d.ts
 # Prisma genera código propio
 src/generated
 
+# Skills de agentes de IA (código de terceros)
+.agents
+.claude
+.codex
+.impeccable
+
 # Documentos guía mantenidos a mano (no reformatear)
 CLAUDE.md
+DESIGN.md
 AGENTS.md
+
+.correos
