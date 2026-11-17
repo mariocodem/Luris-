@@ -8,6 +8,7 @@
  */
 import { obtenerBetterAuth, obtenerDependencias } from '@/composition-root';
 import type { CodigoPlataforma, TipoAsignacion } from '@/generated/prisma/client';
+import { textoDeBusqueda } from '@/modules/procesos/domain/proceso';
 import type { RolDeDespacho } from '@/modules/usuarios/domain/rol-de-despacho';
 import { crearNunc } from '@/shared/domain/nunc';
 import { crearRadicado } from '@/shared/domain/radicado';
@@ -237,6 +238,8 @@ async function sembrar(): Promise<void> {
       alias: ejemplo.alias,
       cliente: ejemplo.cliente,
       activo: ejemplo.activo ?? true,
+      // La búsqueda sin tildes la mantiene el repositorio; la semilla escribe directo.
+      busqueda: textoDeBusqueda(ejemplo),
     };
 
     const proceso = radicado
@@ -267,6 +270,18 @@ async function sembrar(): Promise<void> {
         create: { despachoId, procesoId: proceso.id, etiquetaId },
         update: {},
       });
+    }
+
+    // Un proceso con NUNC espera su consulta asistida en el SPOA (bandeja de pendientes, §6).
+    if (nunc && datos.activo) {
+      const abierto = await db.pendienteDeConfirmacion.findFirst({
+        where: { procesoId: proceso.id, plataforma: 'SPOA', resueltoEn: null },
+      });
+      if (!abierto) {
+        await db.pendienteDeConfirmacion.create({
+          data: { despachoId, procesoId: proceso.id, plataforma: 'SPOA', origen: 'PROGRAMADA' },
+        });
+      }
     }
 
     for (const plataforma of ejemplo.plataformas) {

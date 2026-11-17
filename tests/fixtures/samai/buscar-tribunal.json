@@ -1,0 +1,40 @@
+{
+  "ok": true,
+  "data": {
+    "items": [
+      {
+        "radicado": "05001233300020160013200",
+        "corporacion": "0500123",
+        "guid": "050012333000201600132000500123",
+        "ponente": "Despacho Transitorio 803 Tribunal Administrativo de Antioquia",
+        "codigoPonente": "1400",
+        "codigoDespachoSierju": "050012333803",
+        "nombreDespachoOperativo": "Despacho Transitorio 803 Tribunal Administrativo de Antioquia",
+        "identidadDespacho": {
+          "speakerCode": "1400",
+          "officeCode": "050012333803",
+          "dependencyId": "1817",
+          "officeName": "Despacho Transitorio 803 Tribunal Administrativo de Antioquia",
+          "currentHolder": "DIANA PATRICIA MORENO ROA",
+          "holderStatus": "Vigente",
+          "historicalReportingJudge": "Despacho Transitorio 803 Tribunal Administrativo de Antioquia"
+        },
+        "despacho": "050012333000",
+        "clase": "ACCIÓN DE NULIDAD Y RESTABLECIMIENTO DEL DERECHO",
+        "fechaIngreso": "2016-01-26",
+        "vigente": "NO",
+        "interno": "",
+        "asunto": "CONJUEZ LUZ ADRIANA CASTRO PEÑA _RDRQ_NULL",
+        "demandante": "MARTA LUCIA HERRERA CANO",
+        "demandado": "LA NACION -DIRECCION EJECUTIVA DE ADMINISTRACION JUDICIAL DE ANTIOQUIA- Y OTROS",
+        "esPrivado": false,
+        "urlDetalle": "/Vistas/Casos/list_procesos.aspx?guid=050012333000201600132000500123"
+      }
+    ],
+    "page": 1,
+    "pageSize": 10,
+    "total": 1,
+    "totalPages": 1,
+    "ampliacionCorporacion": null
+  }
+}

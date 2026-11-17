@@ -307,6 +307,44 @@ La marca del sistema. Caja casi recta de doble filete en azul de sello: arriba l
 ### Radicado copiable (firma)
 Radicado (23 dígitos) o NUNC (21) en cifras tabulares 14 px, sin guiones, sin cortes de línea y seleccionable de un clic, seguido de un botón de copiar de 32 px (28 px desde 640 px) en gris lápiz con tooltip. Al copiar: el ícono pasa a ✓ en verde éxito por 2 s, aparece el aviso "Radicado copiado" (o "NUNC copiado") con los dígitos, y una región `aria-live` lo anuncia. Si el portapapeles falla, el aviso de error explica cómo copiarlo a mano.
 
+### Campo de radicado o NUNC
+Campo de cifras tabulares con validación en tiempo real: debajo, "N de 23 números" en gris lápiz mientras se escribe; con el número completo, ✓ en verde éxito y "Se guardará como …" con los dígitos (sin guiones); al salir del campo, el error del dominio en destructive. Si el proceso ya tiene actuaciones, queda de solo lectura (fondo muted) con la razón como ayuda.
+
+### Línea de tiempo de actuaciones
+Lista ordenada dentro de una tarjeta con divisores (la más reciente primero). Cada fila: a la izquierda los sellos de fecha oficial (Actuación y Registro, apilados desde 640 px, lado a lado en móvil); a la derecha la actuación en seminegrita, la anotación en gris lápiz (máx. 68ch), el término ("Término: del dd/mm/aaaa al dd/mm/aaaa", o "el dd/mm/aaaa" si es de un día) y una línea pequeña con la plataforma (y el despacho judicial solo si el proceso pasó por más de uno). Si la plataforma no informa la fecha de registro, se dice en texto, sin sello. Una actuación nueva (llegó después de la carga inicial, en los últimos 7 días) tiñe su fila de nuevo-suave, antepone "Nueva ·" en nuevo-texto y estampa sus sellos; las de la carga inicial nunca se marcan.
+
+Documentos de la actuación: debajo de la anotación, uno por línea con clip de 14 px y el nombre de la plataforma; si está descargado, enlaces "Ver" (PDF e imágenes) y "Descargar" en primary; si no, en gris lápiz pequeño "Obteniéndolo de la plataforma…" o "La plataforma no lo tiene disponible por ahora".
+
+### Consultar ahora
+Botón outline con ícono de refrescar en el panel "Plataformas", separado por un filete. Mientras consulta: deshabilitado, "Consultando…" y el ícono gira (solo sin `prefers-reduced-motion`). Debajo, una línea en gris lápiz con `aria-live` que narra el avance y el resultado; al terminar, un aviso de éxito ("Hay 2 actuaciones nuevas en la Rama Judicial.") o de alerta (la plataforma no respondió), y la ficha se recarga. Cada plataforma del panel muestra su estado en palabras y "Consultado el dd/mm/aaaa, h:mm a. m." (instante de LURIS, no fecha oficial: sin sello).
+
+### Datos según la plataforma
+Sección "Según la Rama Judicial" sobre la línea de tiempo: tarjeta con el despacho judicial en seminegrita (tal como lo escribe la plataforma, en mayúsculas si así viene), el departamento en gris lápiz, una lista de definición de dos columnas desde 640 px (Clase, Tipo, Ponente, Recurso, Ubicación, Radicado el) y las partes ("Demandante: …"). Si el radicado tiene otro expediente, queda plegado en un `<details>` con enlace primary. Un proceso reservado lo dice con un candado de 16 px. Cada plataforma suma sus propios datos a la lista (p. ej. el SPOA: estado, etapa, delitos, unidad; SAMAI: vigente, titular del despacho) y, si tiene página propia del proceso, el enlace "Ver el proceso en …" con ícono de enlace externo (abre otra pestaña). Debajo, separada por un filete, una nota en gris lápiz cuando hace falta explicar algo de esa plataforma (p. ej. que las actuaciones de SAMAI llegan por la Rama Judicial y que sus documentos se agregan a mano).
+
+### Consulta asistida
+Página en dos columnas desde 1024 px (portal a la izquierda, resultado a la derecha de 26rem), apiladas en móvil, con pasos numerados porque el orden importa. Paso 1: "Copia el NUNC" con el radicado copiable, dos frases que dicen qué hacer en el portal y que el reto lo resuelve la persona, y el portal oficial en un marco de 38rem con filete y esquinas de 11 px, más el enlace "Abre el portal en una pestaña nueva". Paso 2: área de texto con etiqueta visible, ayuda en gris lápiz, el aviso de formulario para los errores (dice cómo copiar bien) y "Leer resultado". La vista previa es una tarjeta "Esto es lo que leímos": resumen en una línea (cuántas actuaciones y cuántas nuevas, o que son la historia del proceso), una lista de definición con el despacho y los primeros detalles, las actuaciones con su sello de fecha oficial (máximo 8 y "y N más"), y las acciones "Guardar en LURIS" (primary) y "Corregir el texto" (ghost). Editar el texto descarta la vista previa.
+
+### Bandeja de pendientes
+"Pendientes" en la navegación (ícono de portapapeles con ✓; en móvil, dentro de "Más"). Lista en una tarjeta con divisores: el nombre del proceso como enlace a su ficha, el NUNC copiable, y una línea en gris lápiz con la plataforma, la última consulta exitosa (o "aún sin consultar") y desde cuándo está en la bandeja; a la derecha (debajo en móvil), "Consultar en SPOA (Fiscalía)" como acción principal. Sin pendientes: estado vacío que explica cuándo aparecen.
+
+### Agregar documento
+En cada actuación, para quien puede editar el proceso: botón ghost pequeño en primary con ícono de subida, alineado al texto ("Agregar documento"). Abre el selector de archivos del sistema; mientras sube dice "Subiendo…". El resultado es un aviso: "Documento agregado: nombre.pdf" o el motivo en lenguaje claro (vacío, muy grande, formato no admitido). El documento aparece en la lista de la actuación con "Ver" y "Descargar", como los que trae LURIS.
+
+### Plataformas (credenciales)
+Página de Ajustes. Arriba, tres garantías en gris lápiz con un escudo de 16 px en verde éxito (cifradas y nunca visibles; ritmo bajo y sin resolver retos; se borran cuando se quiera). Una sección por plataforma con título y tarjeta: qué hará LURIS con la cuenta (máx. 68ch), la lista de credenciales guardadas (quién, usuario, cuándo se guardó, resultado de la prueba de acceso: en verde éxito "Acceso verificado", en gris lápiz lo demás) con "Eliminar" en destructive ghost y confirmación en el mismo lugar ("¿Eliminar…? Sí, eliminar / Cancelar"); y el formulario: Usuario y Contraseña en dos columnas desde 640 px, la elección "Mía / Del despacho" solo para el administrador, la casilla de consentimiento con el texto completo (obligatoria, con su error debajo) y "Guardar credencial" (o "Reemplazar credencial"). La contraseña nunca vuelve a la página.
+
+### Visor de documentos
+Página propia con regreso a la ficha, el nombre del documento como título y "Descargar" como acción principal. PDF en un marco de 75 dvh (mínimo 28rem) con filete y esquinas de 11 px, y debajo un enlace para abrirlo en otra pestaña (los navegadores móviles no siempre muestran PDF en marco); imágenes centradas a su ancho; otros formatos, solo descarga.
+
+### Fichas marcables
+Etiquetas y personas para elegir varias: casillas nativas ocultas dentro de fichas redondeadas de 36 px (borde filete, fondo papel). Marcada: fondo secondary, borde primary al 40% y ✓ de 14 px. El foco del teclado dibuja el contorno ring sobre la ficha. Las etiquetas ya asignadas se muestran como fichas pequeñas secondary de solo lectura; nunca con color propio.
+
+### Barra de filtros
+Tarjeta con la búsqueda (ícono de lupa, botón secundario "Buscar") y debajo los selectores en dos columnas en móvil y cuatro desde 768 px. Es un formulario GET: los filtros viven en la URL; cambiar un selector filtra al instante. Debajo de la tarjeta, el total en cifras tabulares, anunciado con `aria-live`.
+
+### Selector de archivo
+Propio, para que nunca muestre textos del navegador en otro idioma: caja de 40 px con borde de campo, segmento "Elegir archivo" en muted a la izquierda y el nombre del archivo (o "Ningún archivo elegido") truncado a la derecha. La casilla nativa queda oculta pero enfocable; el foco y el error se pintan en la caja.
+
 ### Estado vacío
 Caja de borde discontinuo sobre blanco, alineada a la izquierda en móvil y centrada desde 640 px: emblema circular azul claro con ícono de 20 px, título en serif 1.25rem, descripción que dice qué aparecerá ahí y la acción para empezar.
 

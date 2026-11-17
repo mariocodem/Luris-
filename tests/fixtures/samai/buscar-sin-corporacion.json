@@ -1,0 +1,7 @@
+{
+  "ok": false,
+  "error": {
+    "code": "solicitud_invalida",
+    "message": "Seleccione una corporación."
+  }
+}

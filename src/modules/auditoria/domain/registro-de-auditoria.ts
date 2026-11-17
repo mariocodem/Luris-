@@ -14,6 +14,21 @@ export const ACCIONES_DE_AUDITORIA = [
   'DESPACHO_CREADO',
   'DESPACHO_SUSPENDIDO',
   'DESPACHO_REACTIVADO',
+  // Procesos (Fase 4)
+  'PROCESO_REGISTRADO',
+  'PROCESO_EDITADO',
+  'PROCESO_ARCHIVADO',
+  'PROCESO_RESTAURADO',
+  'PROCESO_RESPONSABLE_CAMBIADO',
+  'PROCESO_ASIGNACION_AGREGADA',
+  'PROCESO_ASIGNACION_QUITADA',
+  'PROCESOS_IMPORTADOS',
+  // Consultas asistidas (Fase 6): quién confirmó el resultado de una plataforma con reto.
+  'PROCESO_CONSULTA_ASISTIDA',
+  // Credenciales de plataformas y documentos (Fase 7). Nunca se audita el secreto.
+  'CREDENCIAL_GUARDADA',
+  'CREDENCIAL_ELIMINADA',
+  'DOCUMENTO_AGREGADO',
 ] as const;
 
 export type AccionDeAuditoria = (typeof ACCIONES_DE_AUDITORIA)[number];

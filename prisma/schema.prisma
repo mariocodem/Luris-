@@ -105,6 +105,16 @@ enum EstadoItemConsultaMasiva {
   @@map("estado_item_consulta_masiva")
 }
 
+/// Por qué hay que confirmar una consulta asistida (§6).
+enum OrigenPendiente {
+  /// La sincronización periódica: el proceso lleva días sin consultarse en esa plataforma.
+  PROGRAMADA
+  /// Un ítem de una consulta masiva (Fase 10).
+  MASIVA
+
+  @@map("origen_pendiente")
+}
+
 enum CanalNotificacion {
   CORREO
   WHATSAPP
@@ -150,6 +160,7 @@ model Despacho {
   procesos           Proceso[]
   etiquetas          Etiqueta[]
   registrosAuditoria RegistroAuditoria[]
+  pendientes         PendienteDeConfirmacion[]
 
   @@map("despachos")
 }
@@ -261,6 +272,8 @@ model Invitacion {
   invitadoPor Usuario  @relation(fields: [invitadoPorId], references: [id], onDelete: Cascade)
 
   @@unique([id, despachoId])
+  /// Una sola invitación pendiente por persona y despacho (reenviar reemplaza la anterior).
+  @@unique([despachoId, email], map: "invitaciones_pendiente_unica", where: raw("(estado)::text = 'pending'::text"))
   @@index([despachoId, estado])
   @@index([email])
   @@map("invitaciones")
@@ -285,6 +298,7 @@ model Membresia {
   consultasMasivas        ConsultaMasiva[]
   preferenciaNotificacion PreferenciaNotificacion?
   notificaciones          Notificacion[]
+  documentosSubidos       Documento[]
 
   @@unique([despachoId, usuarioId])
   @@unique([id, despachoId])
@@ -304,6 +318,9 @@ model Proceso {
   alias         String?  @db.VarChar(200)
   /// Cliente o parte, texto libre.
   cliente       String?  @db.VarChar(300)
+  /// Alias y cliente en minúsculas y sin tildes, para buscar sin importar cómo se escriban
+  /// («Perez» encuentra «Pérez»). Lo mantiene el repositorio de procesos.
+  busqueda      String   @default("") @db.VarChar(510)
   /// false = archivado.
   activo        Boolean  @default(true)
   creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz(3)
@@ -314,6 +331,7 @@ model Proceso {
   asignaciones AsignacionProceso[]
   etiquetas    EtiquetaProceso[]
   plataformas  ProcesoPlataforma[]
+  pendientes   PendienteDeConfirmacion[]
 
   @@unique([despachoId, radicado])
   @@unique([despachoId, nunc])
@@ -381,7 +399,10 @@ model ProcesoPlataforma {
   idExterno              String?          @map("id_externo") @db.VarChar(100)
   /// Datos del proceso tal como los informa la plataforma (despacho judicial, partes, clase…).
   datosProceso           Json?            @map("datos_proceso")
+  /// Última consulta exitosa (instante de LURIS, no es una fecha oficial).
   ultimaSincronizacionEn DateTime?        @map("ultima_sincronizacion_en") @db.Timestamptz(3)
+  /// Último intento de consulta, exitoso o no.
+  ultimaConsultaEn       DateTime?        @map("ultima_consulta_en") @db.Timestamptz(3)
   estadoUltimaConsulta   EstadoConsulta?  @map("estado_ultima_consulta")
   creadoEn               DateTime         @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn          DateTime         @updatedAt @map("actualizado_en") @db.Timestamptz(3)
@@ -408,7 +429,16 @@ model Actuacion {
   fechaRegistro       DateTime? @map("fecha_registro") @db.Date
   descripcion         String
   anotacion           String?
+  /// Despacho judicial (juzgado, tribunal…) que registró la actuación, según la plataforma.
+  /// No confundir con `despachoId`, el despacho de abogados dueño del dato.
+  despachoJudicial    String?   @map("despacho_judicial") @db.VarChar(200)
+  /// Término que corre por la actuación (fechas oficiales), si la plataforma lo informa.
+  terminoInicia       DateTime? @map("termino_inicia") @db.Date
+  terminoVence        DateTime? @map("termino_vence") @db.Date
   tieneDocumentos     Boolean   @default(false) @map("tiene_documentos")
+  /// true si llegó en la primera consulta del proceso en esa plataforma: es historia, no novedad,
+  /// y no se notifica.
+  cargaInicial        Boolean   @default(false) @map("carga_inicial")
   /// Cuándo la detectó LURIS. SOLO auditoría: nunca se muestra como fecha de la actuación.
   detectadaEn         DateTime  @default(now()) @map("detectada_en") @db.Timestamptz(3)
 
@@ -427,7 +457,11 @@ model Documento {
   id                 String          @id @default(uuid(7)) @db.Uuid
   despachoId         String          @map("despacho_id") @db.Uuid
   actuacionId        String          @map("actuacion_id") @db.Uuid
+  /// Identificador del documento en la plataforma (p. ej. idRegDocumento de la CPNU).
+  idExterno          String?         @map("id_externo") @db.VarChar(100)
   nombre             String          @db.VarChar(300)
+  /// Fecha oficial en que la plataforma publicó el documento, si la informa.
+  fechaCarga         DateTime?       @map("fecha_carga") @db.Date
   /// URL o referencia del documento en la plataforma de origen.
   urlOrigen          String?         @map("url_origen")
   estado             EstadoDocumento @default(PENDIENTE)
@@ -437,13 +471,43 @@ model Documento {
   sha256             String?         @db.Char(64)
   rutaAlmacenamiento String?         @map("ruta_almacenamiento")
   descargadoEn       DateTime?       @map("descargado_en") @db.Timestamptz(3)
+  /// Quién lo subió a mano (p. ej. un documento que la plataforma solo entrega tras un reto). Nulo
+  /// si lo descargó LURIS de la plataforma.
+  subidoPorId        String?         @map("subido_por_id") @db.Uuid
+  /// Intentos de descarga y el último (para reintentar los no disponibles más tarde).
+  intentos           Int             @default(0)
+  ultimoIntentoEn    DateTime?       @map("ultimo_intento_en") @db.Timestamptz(3)
   creadoEn           DateTime        @default(now()) @map("creado_en") @db.Timestamptz(3)
 
-  actuacion Actuacion @relation(fields: [actuacionId, despachoId], references: [id, despachoId], onDelete: Cascade)
+  actuacion Actuacion  @relation(fields: [actuacionId, despachoId], references: [id, despachoId], onDelete: Cascade)
+  subidoPor Membresia? @relation(fields: [subidoPorId, despachoId], references: [id, despachoId], onDelete: NoAction)
 
-  @@index([actuacionId])
+  @@unique([actuacionId, idExterno])
   @@index([despachoId, sha256])
   @@map("documentos")
+}
+
+/**
+ * Bandeja «Pendientes de tu confirmación» (§6): consultas en plataformas con reto (CAPTCHA) que
+ * LURIS no hace sola y esperan que una persona las confirme. A lo sumo una abierta por proceso y
+ * plataforma.
+ */
+model PendienteDeConfirmacion {
+  id         String           @id @default(uuid(7)) @db.Uuid
+  despachoId String           @map("despacho_id") @db.Uuid
+  procesoId  String           @map("proceso_id") @db.Uuid
+  plataforma CodigoPlataforma
+  origen     OrigenPendiente
+  creadoEn   DateTime         @default(now()) @map("creado_en") @db.Timestamptz(3)
+  /// Cuándo se guardó la consulta que lo resolvió. Nulo = sigue pendiente.
+  resueltoEn DateTime?        @map("resuelto_en") @db.Timestamptz(3)
+
+  despacho Despacho @relation(fields: [despachoId], references: [id], onDelete: Cascade)
+  proceso  Proceso  @relation(fields: [procesoId, despachoId], references: [id, despachoId], onDelete: Cascade)
+
+  @@unique([procesoId, plataforma], map: "pendientes_uno_abierto", where: raw("resuelto_en IS NULL"))
+  @@index([despachoId, resueltoEn])
+  @@map("pendientes_de_confirmacion")
 }
 
 // ─── Credenciales de plataformas ──────────────────────────────────────────────
@@ -451,20 +515,23 @@ model Documento {
 /// Usuario y secreto para plataformas con login. El secreto se guarda cifrado (AES-256-GCM) y
 /// nunca se registra en logs ni se devuelve al cliente.
 model CredencialPlataforma {
-  id               String            @id @default(uuid(7)) @db.Uuid
-  despachoId       String            @map("despacho_id") @db.Uuid
+  id                 String            @id @default(uuid(7)) @db.Uuid
+  despachoId         String            @map("despacho_id") @db.Uuid
   /// Quién la registró y dio el consentimiento; para alcance PERSONAL, también su dueño.
-  membresiaId      String            @map("membresia_id") @db.Uuid
-  plataforma       CodigoPlataforma
-  alcance          AlcanceCredencial
-  usuario          String            @db.VarChar(200)
-  secretoCifrado   Bytes             @map("secreto_cifrado")
+  membresiaId        String            @map("membresia_id") @db.Uuid
+  plataforma         CodigoPlataforma
+  alcance            AlcanceCredencial
+  usuario            String            @db.VarChar(200)
+  secretoCifrado     Bytes             @map("secreto_cifrado")
   /// Versión de la clave de cifrado usada, para poder rotarla.
-  versionClave     Int               @default(1) @map("version_clave")
+  versionClave       Int               @default(1) @map("version_clave")
   /// Consentimiento explícito al registrarla (§6).
-  consentimientoEn DateTime          @map("consentimiento_en") @db.Timestamptz(3)
-  creadoEn         DateTime          @default(now()) @map("creado_en") @db.Timestamptz(3)
-  actualizadoEn    DateTime          @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+  consentimientoEn   DateTime          @map("consentimiento_en") @db.Timestamptz(3)
+  /// Última vez que LURIS probó el acceso con ella, y cómo le fue (mismos códigos que las consultas).
+  verificadaEn       DateTime?         @map("verificada_en") @db.Timestamptz(3)
+  estadoVerificacion EstadoConsulta?   @map("estado_verificacion")
+  creadoEn           DateTime          @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn      DateTime          @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 
   membresia Membresia @relation(fields: [membresiaId, despachoId], references: [id, despachoId], onDelete: Cascade)
 

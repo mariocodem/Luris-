@@ -1,0 +1,46 @@
+{
+  "tipoConsulta": "NumeroRadicacion",
+  "procesos": [
+    {
+      "idProceso": 107906391,
+      "idConexion": 320,
+      "llaveProceso": "50001400300120210034300",
+      "fechaProceso": "2021-04-09T00:00:00",
+      "fechaUltimaActuacion": "2026-10-21T00:00:00",
+      "despacho": "JUZGADO 001 CIVIL MUNICIPAL DE VILLAVICENCIO ",
+      "departamento": "META",
+      "sujetosProcesales": "Demandante/accionante: Banco Bancolombia SA | Demandado/indiciado/causante: ROSA ELENA MARTINEZ GIL  \r\n\t\t\t\t\t | Demandado/indiciado/causante: TERRACARGA LOGISTICS S.A.S. | Defensor Privado: PAULA ANDREA OSORIO\r\n\t\t\t\t\tRUIZ ",
+      "esPrivado": false,
+      "cantFilas": -1
+    },
+    {
+      "idProceso": 107912231,
+      "idConexion": 37,
+      "llaveProceso": "50001400300120210034300",
+      "fechaProceso": "2021-04-09T00:00:00",
+      "fechaUltimaActuacion": "2023-11-28T00:00:00",
+      "despacho": "JUZGADO 001 CIVIL MUNICIPAL DE VILLAVICENCIO ",
+      "departamento": "META",
+      "sujetosProcesales": "Demandante: BANCOLOMBIA S.A | Demandado: TERRACARGA LOGISTIDS S.A.S. | Demandado: ROSA ELENA MARTINEZ GIL ",
+      "esPrivado": false,
+      "cantFilas": -1
+    }
+  ],
+  "parametros": {
+    "numero": "50001400300120210034300",
+    "nombre": null,
+    "tipoPersona": null,
+    "idSujeto": null,
+    "ponente": null,
+    "claseProceso": null,
+    "codificacionDespacho": null,
+    "soloActivos": false
+  },
+  "paginacion": {
+    "cantidadRegistros": 2,
+    "registrosPagina": 20,
+    "cantidadPaginas": 1,
+    "pagina": 1,
+    "paginas": null
+  }
+}

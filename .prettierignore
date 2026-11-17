@@ -23,3 +23,7 @@ DESIGN.md
 AGENTS.md
 
 .correos
+
+# Resultados de Playwright
+test-results
+playwright-report

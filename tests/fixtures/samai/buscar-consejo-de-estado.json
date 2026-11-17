@@ -1,0 +1,40 @@
+{
+  "ok": true,
+  "data": {
+    "items": [
+      {
+        "radicado": "05001233300020210149501",
+        "corporacion": "1100103",
+        "guid": "050012333000202101495011100103",
+        "ponente": "HERNANDO JOSÉ PARRA LUNA",
+        "codigoPonente": "2035",
+        "codigoDespachoSierju": "110110325006",
+        "nombreDespachoOperativo": "HERNANDO JOSE PARRA LUNA",
+        "identidadDespacho": {
+          "speakerCode": "2035",
+          "officeCode": "110110325006",
+          "dependencyId": "34",
+          "officeName": "Despacho 006 ANDRÉS FELIPE ROJAS MEJÍA",
+          "currentHolder": "ANDRÉS FELIPE ROJAS MEJÍA",
+          "holderStatus": "Vigente",
+          "historicalReportingJudge": "HERNANDO JOSÉ PARRA LUNA"
+        },
+        "despacho": "110010325000",
+        "clase": "LEY 1437 NULIDAD Y RESTABLECIMIENTO DEL DERECHO",
+        "fechaIngreso": "2022-09-01",
+        "vigente": "NO",
+        "interno": "4581-2022",
+        "asunto": "((N.I.4581-2022) M.P. DR. PABLO ENRIQUE GIL SOTO. APELACIÓN AUTO INTERLOCUTORIO DEL 25 DE JULIO DE ",
+        "demandante": "CLAUDIA MILENA OSPINA RUIZ",
+        "demandado": "INSTITUTO COLOMBIANO DE BIENESTAR FAMILIAR  - ICBF",
+        "esPrivado": false,
+        "urlDetalle": "/Vistas/Casos/list_procesos.aspx?guid=050012333000202101495011100103"
+      }
+    ],
+    "page": 1,
+    "pageSize": 10,
+    "total": 1,
+    "totalPages": 1,
+    "ampliacionCorporacion": null
+  }
+}

@@ -13,6 +13,12 @@ function enlacesPara(perfil: Perfil): EnlaceDeNavegacion[] {
   const enlaces: (EnlaceDeNavegacion | false)[] = [
     { href: '/inicio', texto: 'Inicio', icono: 'inicio', principalEnMovil: true },
     { href: '/procesos', texto: 'Procesos', icono: 'procesos', principalEnMovil: true },
+    puede(perfil, 'PROCESOS_CONSULTAR') && {
+      href: '/pendientes',
+      texto: 'Pendientes',
+      icono: 'pendientes',
+      principalEnMovil: false,
+    },
     puede(perfil, 'CONSULTA_MASIVA') && {
       href: '/consulta-masiva',
       texto: 'Consulta masiva',

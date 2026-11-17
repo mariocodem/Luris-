@@ -2,6 +2,7 @@
 export type NombreDeIcono =
   | 'inicio'
   | 'procesos'
+  | 'pendientes'
   | 'consulta-masiva'
   | 'notificaciones'
   | 'usuarios'

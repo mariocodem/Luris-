@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <!-- SM2: mantener archivos ASPX/VB/JS/CSS en UTF-8 sin BOM para evitar problemas de acentuación y etiquetas mal renderizadas. -->
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="content-language" content="es" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Iniciar sesi&#243;n - SAMAI</title>
+
+    <!--<link rel="icon" type="image/png" href="/SM2/Features/Home/Img/faviconSamai-fit.png" /><link rel="shortcut icon" type="image/x-icon" href="/SM2/Features/Home/Img/faviconSamai-fit.png" />-->
+    <link rel="icon" type="image/png" href="/Imagenes/oficial/favicon-samai.png" />
+    <link rel="shortcut icon" type="image/x-icon" href="/Imagenes/oficial/favicon-samai.png" />
+
+    <!-- Bootstrap 5 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+      crossorigin="anonymous"
+      defer
+    ></script>
+
+    <!-- FontAwesome -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      rel="stylesheet"
+      crossorigin="anonymous"
+    />
+
+    <!-- CountUp -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/countup.js@2.0.7/dist/countUp.umd.js"
+      integrity="sha384-zU1TqLyrgw3PwGqhZ/EDBe8QeYIV0bzkUbi2E+Obuy6e4g6zyq780gju9qe99uiy"
+      crossorigin="anonymous"
+      defer
+    ></script>
+
+    <!-- Estilos personalizados -->
+    <link href="/App_Themes/SAMAITheme/PortalSAMAI.min.css?v=8.0.92" rel="stylesheet" />
+
+    <!-- Script base -->
+    <script src="/SM2/Shared/Scripts/SM2.js?v=8.0.92" defer></script>
+    <script src="/SM2/Shared/Scripts/VentanasEmergentesSM2.js?v=8.0.92" defer></script>
+    <link rel="stylesheet" href="/App_Themes/SAMAITheme/Login.css?v=8.0.92" />
+    <link
+      href="App_Themes/SAMAITheme/AdministracionPersonas.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/AdministracionPersonas.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/Alertas%20-%20Copia.min%20-%20Copia.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/Alertas%20-%20Copia.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link href="App_Themes/SAMAITheme/Alertas.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link href="App_Themes/SAMAITheme/Alertas.min.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link
+      href="App_Themes/SAMAITheme/BuscadorProvidenciasTituladas.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/CalificacionesNew.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/CalificacionesNew.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link href="App_Themes/SAMAITheme/custom.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link href="App_Themes/SAMAITheme/DatosProceso.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link
+      href="App_Themes/SAMAITheme/DatosProceso.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link href="App_Themes/SAMAITheme/evalidador.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link
+      href="App_Themes/SAMAITheme/evalidador.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link href="App_Themes/SAMAITheme/ExpresSAMAI.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link
+      href="App_Themes/SAMAITheme/ExpresSAMAI.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/ExternalLoginCallback.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/ExternalLoginCallback.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link href="App_Themes/SAMAITheme/Firmas.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link href="App_Themes/SAMAITheme/Firmas.min.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link href="App_Themes/SAMAITheme/FWestilos.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link
+      href="App_Themes/SAMAITheme/FWestilos.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link href="App_Themes/SAMAITheme/Login.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link href="App_Themes/SAMAITheme/MiPerfil.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link href="App_Themes/SAMAITheme/MiPerfil.min.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link href="App_Themes/SAMAITheme/PortalSAMAI.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link
+      href="App_Themes/SAMAITheme/PortalSAMAI.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link href="App_Themes/SAMAITheme/procesos.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link href="App_Themes/SAMAITheme/procesos.min.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link href="App_Themes/SAMAITheme/Propios.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link href="App_Themes/SAMAITheme/Propios.min.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link
+      href="App_Themes/SAMAITheme/PublicacionesProcesales.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/PublicacionesProcesales.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/ReportesPersonal.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/ReportesPersonal.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/ResultadoBusqueda.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/SAMAIComponentes.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/SentenciasTIC.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/SentenciasTIC.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link href="App_Themes/SAMAITheme/Site.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link href="App_Themes/SAMAITheme/Site.min.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link
+      href="App_Themes/SAMAITheme/WBibliotecaDigital.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/WBibliotecaDigital.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/WGestionSecretarial.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link href="App_Themes/SAMAITheme/WMonitorNew.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link
+      href="App_Themes/SAMAITheme/WMonitorNew.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link href="App_Themes/SAMAITheme/Wradicacion.css?v=8.0.92" type="text/css" rel="stylesheet" />
+    <link
+      href="App_Themes/SAMAITheme/Wradicacion.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/WSecretariaOnLine.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/WSecretariaOnLine.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/WValidarAbogado%20-%20Copia.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/WValidarAbogado.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+    <link
+      href="App_Themes/SAMAITheme/WValidarAbogado.min.css?v=8.0.92"
+      type="text/css"
+      rel="stylesheet"
+    />
+  </head>
+  <body style="background-color: #f6f7f8">
+    <form method="post" action="./Login.aspx" id="ctl01" class="min-vh-100 d-flex flex-column">
+      <input
+        type="hidden"
+        name="__VIEWSTATE"
+        id="__VIEWSTATE"
+        value="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"
+      />
+
+      <script src="Scripts/WebForms/MsAjax/MicrosoftAjax.js" type="text/javascript"></script>
+      <input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="C2EE9ABB" />
+      <input
+        type="hidden"
+        name="__EVENTVALIDATION"
+        id="__EVENTVALIDATION"
+        value="rnBHszr0C3ZrK3vijma8YqWEj2wKLJ7WC2jNJlULhHpMVfG6ltu37yAOWRS7ZnT1dRQBMhoxuFLxbSUgDCjMr0O2lDuoIVDRx6rQk7f3KFS1hg8V1NMb4KmQojYxau9VMHXgYuJ9BFQmmnMhwFYMlNHTSVRILmwXJHDjXZA3U/4="
+      />
+
+      <!-- NAVBAR -->
+      <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top sm2-top-navbar shadow-sm">
+        <div class="container-fluid">
+          <!-- Logo SAMAI -->
+          <a class="navbar-brand" href="/">
+            <img
+              src="/Imagenes/oficial/samailogo_BH71.png"
+              alt="SAMAI"
+              class="sm2-navbar-brand-logo"
+            />
+            <!--<img src="/SM2/Features/Home/Img/samailogo2025.png" alt="SAMAI" style="height: 60px;" />-->
+          </a>
+
+          <!-- Toggle en móvil -->
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <!-- Menú principal -->
+          <div class="navbar-collapse collapse" id="mainNavbar">
+            <ul class="navbar-nav mb-lg-0 sm2-top-navbar-nav ms-auto mb-2">
+              <li class="nav-item">
+                <a class="nav-link sm2-top-nav-link sm2-top-nav-link-active" href="/Default.aspx">
+                  <i class="fas fa-home"></i><span>Inicio</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link sm2-top-nav-link"
+                  href="https://ventanillavirtual.consejodeestado.gov.co"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <i class="fas fa-chalkboard-teacher"></i><span>Ventanilla virtual</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link sm2-top-nav-link" href="/Vistas/Casos/procesos.aspx">
+                  <i class="fas fa-folder"></i><span>Consulta procesos</span>
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link sm2-top-nav-link" href="/Vistas/documentos/evalidador.aspx">
+                  <i class="fas fa-spell-check"></i><span>Validador</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link sm2-top-nav-link"
+                  href="https://www.consejodeestado.gov.co/manuales/manualsujetos/"
+                  target="_manuales"
+                  rel="noopener noreferrer"
+                >
+                  <i class="fas fa-question-circle"></i><span>Ayuda</span>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a
+                  class="nav-link sm2-top-nav-link"
+                  href="/TitulacionRelatoria/BuscadorProvidenciasTituladas.aspx"
+                >
+                  <i class="fa-solid fa-swatchbook"></i><span>Jurisprudencia</span>
+                </a>
+              </li>
+              <li class="nav-item sm2-top-navbar-seal">
+                <a
+                  class="navbar-brand me-0 mb-0"
+                  href="https://www.consejodeestado.gov.co/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img
+                    src="/Imagenes/oficial/logoentidadCE_H71.png"
+                    alt="Consejo de Estado"
+                    class="sm2-navbar-seal-logo"
+                  />
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a class="nav-link sm2-top-nav-link" href="/Login.aspx">
+                  <i class="fas fa-user"></i><span>Ingresar</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+
+      <!-- CONTENIDO PRINCIPAL -->
+      <main class="mt-3 flex-grow-1 pt-5">
+        <!-- Título institucional -->
+        <section class="border-bottom mt-4 py-3" id="sedeelectronicasamai">
+          <div class="container px-4 text-center">
+            <h1 class="h4 fw-bold text-uppercase text-dark sm2-institutional-title mb-0">
+              SEDE ELECTRÓNICA DE LA JURISDICCIÓN DE LO CONTENCIOSO ADMINISTRATIVO DE COLOMBIA
+              <span id="Lblmodo"
+                ><b><font color="#CC3300">SAMAI</font></b></span
+              >
+            </h1>
+          </div>
+        </section>
+
+        <section class="login-page py-lg-5 py-4">
+          <div class="login-page-container px-lg-4 container px-3">
+            <div class="row g-4 g-xl-5 align-items-stretch">
+              <div class="col-lg-7 col-xl-6 col-12">
+                <div class="login-card h-100">
+                  <div class="login-card-body">
+                    <header class="login-header">
+                      <h2 class="login-title">Bienvenido</h2>
+                      <p class="login-lead mb-0">
+                        Seleccione la forma de ingreso que corresponde a su cuenta.
+                      </p>
+                    </header>
+
+                    <div id="MainContent_AuthProvidersContainer" class="auth-providers">
+                      <section
+                        class="login-institutional-entry"
+                        aria-labelledby="institutionalLoginTitle"
+                      >
+                        <div class="login-access-heading">
+                          <span class="login-access-kicker">Acceso institucional</span>
+                          <h3 class="login-access-title" id="institutionalLoginTitle">
+                            Ingreso para servidores judiciales
+                          </h3>
+                          <p class="login-access-description">
+                            Use su correo institucional JCA para ingresar.
+                          </p>
+                        </div>
+                        <div class="d-grid">
+                          <a
+                            id="MainContent_MicrosoftLoginButton"
+                            class="sm2-btn sm2-btn-lg btn-login-entra login-primary"
+                            href="/Login/ExternalLoginStart.aspx?provider=SM2-EntraID"
+                          >
+                            <span class="btn-login-entra-icon" aria-hidden="true">
+                              <i class="fab fa-microsoft"></i>
+                            </span>
+                            <span>Ingresar con correo institucional JCA</span>
+                          </a>
+                        </div>
+                      </section>
+                      <div
+                        class="auth-divider login-access-divider"
+                        aria-label="O continúe con usuario y contraseña"
+                      >
+                        <span>O continúe con</span>
+                      </div>
+                    </div>
+
+                    <section class="login-legacy-entry" aria-labelledby="legacyLoginTitle">
+                      <div class="login-access-heading login-access-heading--legacy">
+                        <h3 class="login-access-title" id="legacyLoginTitle">
+                          Ingreso con usuario y contraseña
+                        </h3>
+                        <p class="login-access-description">
+                          Para ciudadanía, usuarios externos e internos sin correo
+                          @cendoj.ramajudicial.gov.co o @consejodeestado.gov.co. Ingrese con sus
+                          credenciales de SAMAI.
+                        </p>
+                      </div>
+
+                      <div class="login-form-fields">
+                        <div class="mb-2">
+                          <div class="input-group login-input-group">
+                            <span class="input-group-text login-input-icon" aria-hidden="true">
+                              <i class="fas fa-user"></i>
+                            </span>
+                            <input
+                              name="ctl00$MainContent$UserNames"
+                              type="text"
+                              autocomplete="off"
+                              id="MainContent_UserNames"
+                              class="form-control form-control-lg login-input"
+                              autocomplete="username"
+                              placeholder="Usuario"
+                              aria-label="Usuario"
+                            />
+                          </div>
+                        </div>
+
+                        <div class="mb-3">
+                          <div class="input-group login-input-group login-password-group">
+                            <span class="input-group-text login-input-icon" aria-hidden="true">
+                              <i class="fas fa-lock"></i>
+                            </span>
+                            <input
+                              name="ctl00$MainContent$Password"
+                              type="password"
+                              id="MainContent_Password"
+                              class="form-control form-control-lg login-input"
+                              autocomplete="current-password"
+                              placeholder="Contraseña"
+                              aria-label="Contraseña"
+                            />
+                            <button
+                              class="btn login-password-toggle"
+                              type="button"
+                              id="btnTogglePassword"
+                              aria-label="Mostrar u ocultar contraseña"
+                              title="Mostrar contraseña"
+                            >
+                              <i class="fas fa-eye" id="iconTogglePassword"></i>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                          <input
+                            type="submit"
+                            name="ctl00$MainContent$BtnIngresar"
+                            value="Ingresar"
+                            id="MainContent_BtnIngresar"
+                            class="sm2-btn sm2-btn-lg login-submit login-secondary"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="login-links mt-4 text-center">
+                        <a id="MainContent_LbtOlvido" class="login-forgot-link" href="Register.aspx"
+                          >¿Olvidó su contraseña o necesita registrarse?</a
+                        >
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-lg-5 col-xl-6 col-12">
+                <aside class="login-side-panel ventanilla-panel h-100">
+                  <div class="ventanilla-hero">
+                    <div class="ventanilla-hero-icon" aria-hidden="true">
+                      <i class="fas fa-building-columns"></i>
+                    </div>
+                    <div class="ventanilla-hero-rings" aria-hidden="true"></div>
+                  </div>
+
+                  <div class="ventanilla-panel-body">
+                    <div class="ventanilla-kicker">Ventanilla Virtual</div>
+                    <h3 class="ventanilla-title">¿No tiene usuario?</h3>
+                    <p class="ventanilla-lead">
+                      Si es usuario externo o sujeto procesal y desea consultar sus procesos
+                      judiciales, solicite su acceso desde Ventanilla Virtual.
+                    </p>
+
+                    <ol class="ventanilla-steps mb-4">
+                      <li>Ingrese a Ventanilla Virtual.</li>
+                      <li>Realice la solicitud o trámite correspondiente.</li>
+                      <li>Siga las indicaciones para completar su acceso.</li>
+                    </ol>
+
+                    <div class="d-grid d-sm-inline-flex">
+                      <a
+                        id="MainContent_VentanillaHyperLink"
+                        class="sm2-btn sm2-btn-outline-light sm2-btn-lg ventanilla-cta"
+                        href="https://ventanillavirtual.consejodeestado.gov.co/"
+                        target="_blank"
+                      >
+                        <i class="fas fa-arrow-up-right-from-square me-2" aria-hidden="true"></i>Ir
+                        a Ventanilla Virtual
+                      </a>
+                    </div>
+
+                    <div class="login-side-footer">
+                      <p class="ventanilla-help-text mb-0">
+                        Si quiere saber cómo crear su usuario, aquí encuentra la ayuda para el
+                        ciudadano y el manual de Ventanilla Virtual.
+                      </p>
+                      <div class="ventanilla-help-links">
+                        <a
+                          class="ventanilla-help-link"
+                          href="https://www.consejodeestado.gov.co/manuales/manualsujetos/knowledge-base/ventanilla-virtual/index.htm"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <span class="ventanilla-help-link-main">
+                            <span class="ventanilla-help-link-icon" aria-hidden="true">
+                              <i class="fas fa-book-open"></i>
+                            </span>
+                            <span>Manual de Ventanilla Virtual</span>
+                          </span>
+                          <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </a>
+                        <a
+                          class="ventanilla-help-link"
+                          href="https://www.consejodeestado.gov.co/manuales/manualsujetos/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <span class="ventanilla-help-link-main">
+                            <span class="ventanilla-help-link-icon" aria-hidden="true">
+                              <i class="fas fa-circle-question"></i>
+                            </span>
+                            <span>Ayuda para el ciudadano</span>
+                          </span>
+                          <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </aside>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <script>
+          (function () {
+            var btn = document.getElementById('btnTogglePassword');
+            if (!btn) return;
+            btn.addEventListener('click', function () {
+              var pwdField = document.getElementById('MainContent_Password');
+              var icon = document.getElementById('iconTogglePassword');
+              if (!pwdField || !icon) return;
+              var isHidden = pwdField.type === 'password';
+              pwdField.type = isHidden ? 'text' : 'password';
+              icon.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+              btn.title = isHidden ? 'Ocultar contraseña' : 'Mostrar contraseña';
+            });
+          })();
+        </script>
+      </main>
+
+      <div
+        class="modal fade"
+        id="SM2_modalEmergentes"
+        tabindex="-1"
+        aria-labelledby="SM2_modalEmergentesLabel"
+        aria-hidden="true"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+      >
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content shadow-lg">
+            <div class="modal-header bg-dark text-white">
+              <h5 class="modal-title" id="SM2_modalEmergentesLabel">
+                <i class="fas fa-exclamation-circle"></i>Avisos Importantes
+              </h5>
+            </div>
+            <div class="modal-body p-4">
+              <div id="SM2_modalEmergentesAvisos"></div>
+            </div>
+            <div class="modal-footer justify-content-end gap-2">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="SM2_btnAnteriorAviso"
+                style="display: none"
+              >
+                <i class="fas fa-chevron-left"></i>Anterior
+              </button>
+              <button
+                type="button"
+                class="btn btn-dark"
+                id="SM2_btnSiguienteAviso"
+                style="display: none"
+              >
+                Siguiente <i class="fas fa-chevron-right"></i>
+              </button>
+              <button
+                type="button"
+                class="btn btn-dark"
+                id="SM2_btnCerrarEmergente"
+                style="display: none"
+              >
+                Finalizar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="text-white-50 small bg-black py-3">
+        <div class="container">
+          <div class="row align-items-center">
+            <div class="col-md-6 text-md-start mb-md-0 mb-2 text-center">
+              SAMAI · Rama Judicial de Colombia · Consejo de Estado &copy; 2026
+            </div>
+            <div class="col-md-6 text-md-end text-center">
+              Hecho con <span class="text-danger">♥</span> por
+              <a
+                href="/SM2/Features/Home/Paginas/EquipoCetic.aspx"
+                class="text-decoration-none text-white"
+                target="_blank"
+                rel="noopener noreferrer"
+                >CETIC</a
+              >
+            </div>
+            <div style="display: none">
+              |
+              <span id="lblversion"></span>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <script type="text/javascript">
+        //<![CDATA[
+        window.setTimeout(function () {
+          window.location.replace('/LogoutNow.aspx?expired=1');
+        }, 14400000); //]]>
+      </script>
+    </form>
+  </body>
+</html>

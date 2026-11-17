@@ -225,6 +225,45 @@ describe('escrituras anidadas', () => {
   });
 });
 
+describe('navegación hacia tablas de autenticación', () => {
+  it.each([
+    ['include de sesiones', 'Despacho', { include: { sesionesActivas: true } }],
+    [
+      'select de sesiones',
+      'Despacho',
+      { select: { sesionesActivas: { select: { token: true } } } },
+    ],
+    [
+      'conteo de sesiones',
+      'Despacho',
+      { select: { _count: { select: { sesionesActivas: true } } } },
+    ],
+    [
+      'filtro por token (oráculo)',
+      'Despacho',
+      { where: { sesionesActivas: { some: { token: 'x' } } } },
+    ],
+    [
+      'desde una membresía',
+      'Membresia',
+      { include: { despacho: { include: { sesionesActivas: true } } } },
+    ],
+    [
+      'desde un proceso, en un filtro',
+      'Proceso',
+      { where: { despacho: { sesionesActivas: { none: {} } } } },
+    ],
+  ])('rechaza %s', (_caso, modelo, args) => {
+    expect(() => aplicar(modelo, 'findMany', args)).toThrow(ErrorDeAislamiento);
+  });
+
+  it('sigue permitiendo las demás relaciones del despacho', () => {
+    expect(() =>
+      aplicar('Despacho', 'findMany', { include: { membresias: true, invitaciones: true } }),
+    ).not.toThrow();
+  });
+});
+
 describe('navegación desde Usuario', () => {
   it.each([
     ['include de relaciones', 'Usuario', { include: { membresias: true } }],

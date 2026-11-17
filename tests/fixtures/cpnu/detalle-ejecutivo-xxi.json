@@ -1,0 +1,18 @@
+{
+  "idRegProceso": 10791223,
+  "llaveProceso": "50001400300120210034300",
+  "idConexion": 37,
+  "esPrivado": false,
+  "fechaProceso": "2021-04-09T00:00:00",
+  "codDespachoCompleto": "500014003001",
+  "despacho": "JUZGADO 001 CIVIL MUNICIPAL DE VILLAVICENCIO ",
+  "ponente": "Juez Juzgado Primero Civil Municipal",
+  "tipoProceso": "De Ejecución",
+  "claseProceso": "Ejecutivo Singular",
+  "subclaseProceso": "Por sumas de dinero",
+  "recurso": "Sin Tipo de Recurso",
+  "ubicacion": "Secretaria - Estado",
+  "contenidoRadicacion": null,
+  "fechaConsulta": "2026-11-16T09:49:55.873",
+  "ultimaActualizacion": "2026-11-16T09:49:30.913"
+}

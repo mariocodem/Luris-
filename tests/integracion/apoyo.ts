@@ -121,6 +121,9 @@ export async function crearEscenarioDeDespacho(
   const notificacion = await prisma.notificacion.create({
     data: { despachoId, membresiaId: membresia.id, actuacionId: actuacion.id, canal: 'CORREO' },
   });
+  await prisma.pendienteDeConfirmacion.create({
+    data: { despachoId, procesoId: proceso.id, plataforma: 'SPOA', origen: 'PROGRAMADA' },
+  });
   const registro = await prisma.registroAuditoria.create({
     data: { despachoId, actorId: usuario.id, accion: 'PROCESO_CREADO' },
   });

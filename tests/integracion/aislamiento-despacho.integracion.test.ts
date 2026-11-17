@@ -339,6 +339,18 @@ describe('el propio despacho', () => {
     expect(await clienteA.despacho.findUnique({ where: { id: b.despachoId } })).toBeNull();
   });
 
+  it('no puede leer las sesiones (tokens) de sus miembros a través del despacho', async () => {
+    await expect(
+      clienteA.despacho.findUnique({
+        where: { id: a.despachoId },
+        include: { sesionesActivas: true },
+      }),
+    ).rejects.toBeInstanceOf(ErrorDeAislamiento);
+    await expect(
+      clienteA.despacho.count({ where: { sesionesActivas: { some: { token: 'adivinanza' } } } }),
+    ).rejects.toBeInstanceOf(ErrorDeAislamiento);
+  });
+
   it('puede editar su nombre, pero no su estado ni su plan', async () => {
     const editado = await clienteA.despacho.update({
       where: { id: a.despachoId },

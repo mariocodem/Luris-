@@ -30,7 +30,88 @@ const esquemaEnv = z
     CORREO_TRANSPORTE: z.enum(['archivo']).default('archivo'),
     CORREO_DIRECTORIO: z.string().default('.correos'),
     CORREO_REMITENTE: z.string().default('LURIS <no-responder@luris.test>'),
+
+    // ─── Plataformas judiciales (§6) ───────────────────────────────────────────
+    /** API de la Consulta de Procesos Nacional Unificada (Rama Judicial). */
+    CPNU_URL_BASE: z
+      .url({ protocol: /^https?$/ })
+      .default('https://consultaprocesos.ramajudicial.gov.co:448/api/v2'),
+    /**
+     * Ritmo máximo de solicitudes a la CPNU (consultas y documentos del worker suman). Con ráfagas
+     * de ~35 por minuto la CPNU empezó a responder 403 a los documentos: el valor por defecto
+     * es conservador.
+     */
+    CPNU_SOLICITUDES_POR_MINUTO: z.coerce.number().int().min(1).max(600).default(20),
+    /** Minutos sin consultar la CPNU cuando frena a LURIS (403 o 429 persistente). */
+    CPNU_PAUSA_POR_BLOQUEO_MINUTOS: z.coerce.number().int().min(1).max(240).default(10),
+    /** Procesos que el worker consulta a la vez en la CPNU. */
+    CPNU_CONCURRENCIA: z.coerce.number().int().min(1).max(20).default(2),
+    /** Tiempo máximo de espera por solicitud a una plataforma (la CPNU puede ser lenta). */
+    PLATAFORMAS_TIEMPO_LIMITE_SEGUNDOS: z.coerce.number().int().min(5).max(300).default(60),
+    /** Reintentos inmediatos de una solicitud ante fallos pasajeros (después reintenta la cola). */
+    PLATAFORMAS_REINTENTOS: z.coerce.number().int().min(0).max(5).default(2),
+    /** User-Agent identificable de LURIS (§6). Si se omite, se arma con APP_URL. */
+    PLATAFORMAS_USER_AGENT: z.string().min(5).max(200).optional(),
+    /**
+     * Cuándo se sincronizan solos todos los procesos activos: expresión cron de 5 campos en hora
+     * de Bogotá, o "off" para desactivarla. Por defecto a las 6:00, 13:00 y 19:00.
+     */
+    SINCRONIZACION_CRON: z
+      .string()
+      .trim()
+      .regex(
+        /^(off|(\S+\s+){4}\S+)$/,
+        'Usa una expresión cron de 5 campos (p. ej. "0 6,13,19 * * *") u "off".',
+      )
+      .default('0 6,13,19 * * *'),
+
+    /** Portal «Consulta su denuncia» de la Fiscalía, para la consulta asistida del SPOA. */
+    SPOA_URL_PORTAL: z
+      .url({ protocol: /^https?$/ })
+      .default('https://consulta-web.fiscalia.gov.co/'),
+    /**
+     * Servicio oficial de interoperabilidad del SPOA. Solo cuando la Fiscalía lo conceda (ver
+     * docs/solicitudes): con URL y credencial, el SPOA se consulta solo; sin ellas, es asistido.
+     */
+    SPOA_INTEROPERABILIDAD_URL: z.url({ protocol: /^https$/ }).optional(),
+    SPOA_INTEROPERABILIDAD_TOKEN: z.string().min(16).optional(),
+    SPOA_SOLICITUDES_POR_MINUTO: z.coerce.number().int().min(1).max(600).default(10),
+    /** Días sin consultar el SPOA tras los cuales el proceso vuelve a la bandeja de pendientes. */
+    SPOA_DIAS_ENTRE_CONFIRMACIONES: z.coerce.number().int().min(1).max(90).default(7),
+
+    /** Búsqueda pública de SAMAI (jurisdicción de lo contencioso administrativo). */
+    SAMAI_URL_BASE: z.url({ protocol: /^https?$/ }).default('https://samai.consejodeestado.gov.co'),
+    SAMAI_SOLICITUDES_POR_MINUTO: z.coerce.number().int().min(1).max(600).default(10),
+
+    // ─── Credenciales de plataformas (§4, §6) ──────────────────────────────────
+    /**
+     * Clave AES-256-GCM (32 bytes en base64) con la que se cifran las contraseñas de plataformas
+     * que registran los abogados. Sin ella, LURIS no acepta credenciales. Si se pierde, las
+     * guardadas no se pueden recuperar: hay que registrarlas de nuevo.
+     */
+    CREDENCIALES_CLAVE: z
+      .string()
+      .refine((v) => Buffer.from(v, 'base64').length === 32, {
+        message:
+          'Debe ser una clave de 32 bytes en base64 (genera una con `openssl rand -base64 32`).',
+      })
+      .optional(),
+
+    // ─── Documentos (§8) ───────────────────────────────────────────────────────
+    /** Carpeta de los documentos descargados (en Docker, el volumen de la app). */
+    ALMACEN_DIRECTORIO: z.string().min(1).default('storage/documentos'),
+    DOCUMENTO_TAMANO_MAXIMO_MB: z.coerce.number().int().min(1).max(200).default(25),
   })
+  .refine(
+    (env) =>
+      (env.SPOA_INTEROPERABILIDAD_URL === undefined) ===
+      (env.SPOA_INTEROPERABILIDAD_TOKEN === undefined),
+    {
+      path: ['SPOA_INTEROPERABILIDAD_TOKEN'],
+      message:
+        'El servicio oficial del SPOA necesita a la vez la URL y la credencial (o ninguna de las dos).',
+    },
+  )
   // Hoy "archivo" es el único transporte: en producción no hay uno válido hasta la Fase 11.
   .refine((env) => env.NODE_ENV !== 'production', {
     path: ['CORREO_TRANSPORTE'],
@@ -40,6 +121,9 @@ const esquemaEnv = z
   .transform((env) => ({
     ...env,
     LOG_FORMAT: env.LOG_FORMAT ?? (env.NODE_ENV === 'development' ? 'pretty' : 'json'),
+    PLATAFORMAS_USER_AGENT:
+      env.PLATAFORMAS_USER_AGENT ??
+      `LURIS/0.1 (seguimiento de procesos judiciales; +${env.APP_URL})`,
   }));
 
 export type Env = z.infer<typeof esquemaEnv>;

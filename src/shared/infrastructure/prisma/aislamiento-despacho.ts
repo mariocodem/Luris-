@@ -202,6 +202,12 @@ function verificarNavegacion(modelo: Modelo, nodo: unknown, ruta: string): void 
     ) {
       throw new ErrorDeAislamiento(`Navegación no permitida desde Usuario: ${ruta}.${clave}`);
     }
+    // Sesiones, cuentas y verificaciones guardan tokens y hashes: ni leerlas ni filtrar por ellas
+    // (un filtro serviría de oráculo para adivinar un token). Llegan, p. ej., por
+    // Despacho.sesionesActivas.
+    if (destino !== undefined && CLASIFICACION[destino] === 'AUTENTICACION') {
+      throw new ErrorDeAislamiento(`Navegación hacia autenticación no permitida: ${ruta}.${clave}`);
+    }
     if (destino !== undefined) verificarNavegacion(destino, valor, `${ruta}.${clave}`);
     else if (CLAVES_ESTRUCTURALES.has(clave))
       verificarNavegacion(modelo, valor, `${ruta}.${clave}`);

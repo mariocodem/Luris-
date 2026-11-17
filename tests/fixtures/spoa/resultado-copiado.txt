@@ -1,0 +1,54 @@
+Consulta de casos registrados en la base de datos del Sistema Penal Oral Acusatorio - SPOA
+Número de la Noticia Criminal
+110016000049202300123
+Estado
+ACTIVO
+Etapa noticia criminal
+INDAGACION
+Departamentos hechos
+BOGOTÁ, D. C.
+Municipios hechos
+BOGOTÁ, D.C.
+Fecha hechos
+14/03/2023
+Ley de aplicabilidad
+LEY 906 DE 2004
+Despacho asignado
+Seccional
+DIRECCIÓN SECCIONAL DE BOGOTÁ
+Unidad
+UNIDAD DE PATRIMONIO ECONÓMICO
+Despacho
+FISCALÍA 123 LOCAL
+Fecha asignación
+20/03/2023
+Ubicación del despacho
+Departamento
+BOGOTÁ, D. C.
+Municipio
+BOGOTÁ, D.C.
+Dirección
+CALLE FICTICIA # 00-00
+Correo electrónico
+Ninguno
+Teléfonos
+6015550000
+Delito
+ESTAFA ART. 246 C.P.
+Grado del delito CONSUMADO
+Delito
+FALSEDAD EN DOCUMENTO PRIVADO ART. 289 C.P.
+Grado del delito TENTATIVA
+Actuaciones del caso - No reservadas
+Fecha actuación
+Nombre actuación
+10/05/2023
+ASIGNACION
+02/04/2023
+RECEPCION DENUNCIA
+02/04/2023
+RECEPCION DENUNCIA
+Fecha de consulta
+16/11/2026 3:15 p. m.
+Volver
+Imprimir
