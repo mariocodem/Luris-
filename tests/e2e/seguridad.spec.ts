@@ -33,6 +33,13 @@ test('las respuestas llevan las cabeceras de seguridad', async ({ request }) => 
   expect(cabeceras['x-powered-by']).toBeUndefined();
 });
 
+test('la comprobación de salud responde sin sesión y sin revelar detalles', async ({ request }) => {
+  const respuesta = await request.get('/api/salud');
+  expect(respuesta.status()).toBe(200);
+  expect(await respuesta.json()).toEqual({ estado: 'ok' });
+  expect(respuesta.headers()['cache-control']).toContain('no-store');
+});
+
 test('los enlaces de un solo uso no filtran su token por el Referer ni se guardan en caché', async ({
   request,
 }) => {

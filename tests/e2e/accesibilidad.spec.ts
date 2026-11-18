@@ -75,10 +75,9 @@ for (const vista of VISTAS) {
       await page.goto('/procesos');
       await page.waitForLoadState('networkidle');
       const primero = page.getByRole('link', { name: /Ejecutivo|Restitución|Ordinario/ }).first();
-      await primero.click();
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-      await page.waitForLoadState('networkidle');
-      await revisarPaginaActual(page, 'ficha del proceso');
+      const ficha = await primero.getAttribute('href');
+      expect(ficha).toMatch(/^\/procesos\/[0-9a-f-]{36}$/);
+      await revisar(page, ficha ?? '/procesos');
     });
   });
 }

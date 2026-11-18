@@ -77,9 +77,15 @@ export function crearBetterAuth(opciones: OpcionesBetterAuth) {
         else logger.debug(mensaje);
       },
     },
+    // Solo el propio origen puede pedir acciones con la sesión (defensa extra contra CSRF; las
+    // server actions de Next.js ya comparan además el origen de cada petición).
+    trustedOrigins: [opciones.urlBase],
     advanced: {
       cookiePrefix: 'luris',
       database: { generateId: false },
+      // Cookies solo por HTTPS cuando LURIS se sirve por HTTPS (siempre, en producción).
+      useSecureCookies: opciones.urlBase.startsWith('https://'),
+      defaultCookieAttributes: { httpOnly: true, sameSite: 'lax' },
     },
 
     user: {
@@ -96,6 +102,9 @@ export function crearBetterAuth(opciones: OpcionesBetterAuth) {
     },
     session: {
       modelName: 'sesion',
+      // La sesión dura 7 días y se renueva si se usa; desactivar una cuenta la cierra al instante.
+      expiresIn: 60 * 60 * 24 * 7,
+      updateAge: 60 * 60 * 24,
       fields: {
         expiresAt: 'expiraEn',
         ipAddress: 'direccionIp',

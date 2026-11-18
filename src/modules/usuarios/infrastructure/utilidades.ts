@@ -14,6 +14,9 @@ export const generadorDeTokens: GeneradorDeTokens = {
  * Suficiente para un solo contenedor de aplicación (§12). Si algún día hay varias réplicas,
  * se reemplaza por una implementación en PostgreSQL detrás del mismo puerto.
  */
+/** Claves distintas que se recuerdan a la vez antes de limpiar las vencidas. */
+const MAXIMO_DE_CLAVES = 10_000;
+
 export function crearLimitadorEnMemoria(opciones: {
   readonly maximoDeFallos: number;
   readonly ventanaMinutos: number;
@@ -41,6 +44,10 @@ export function crearLimitadorEnMemoria(opciones: {
       return Math.max(1, Math.ceil(restanteMs / 60_000));
     },
     registrarFallo(clave) {
+      // Sin esto, quien pruebe muchas claves distintas llenaría la memoria.
+      if (registros.size >= MAXIMO_DE_CLAVES) {
+        for (const otra of [...registros.keys()]) vigente(otra);
+      }
       const registro = vigente(clave);
       if (registro) registro.fallos += 1;
       else registros.set(clave, { fallos: 1, desde: reloj.ahora().getTime() });

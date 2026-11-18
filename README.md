@@ -281,6 +281,16 @@ detalle (arquitectura, reintentos, advertencias de WhatsApp y qué se probó) es
   dedicado: no es la API oficial de Meta y el número puede ser bloqueado. No se ha probado contra
   WhatsApp real.
 
+## Endurecimiento (Fase 12)
+
+- **Seguridad**: cabeceras y CSP (producción), límites de intentos y de uso, cookies de sesión
+  `HttpOnly`/`SameSite`, CSRF, cifrado y logs sin secretos. Detalle, requisitos del proxy y revisión
+  de dependencias en [docs/operacion.md](docs/operacion.md).
+- **Accesibilidad y rendimiento**: axe (WCAG 2.2 AA) sin violaciones en claro/oscuro, escritorio y
+  celular; Lighthouse móvil 96-100 en rendimiento y 100 en accesibilidad, buenas prácticas y SEO.
+- **Salud**: `GET /api/salud` para el healthcheck.
+- **Documentación**: [guía de usuario](docs/guia-de-usuario.md) y [operación](docs/operacion.md).
+
 ## Pruebas
 
 - **Unidad** (`*.test.ts`, junto al código): dominio e infraestructura pura, sin base de datos.

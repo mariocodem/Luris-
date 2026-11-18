@@ -49,3 +49,21 @@ describe('generadorDeTokens', () => {
     expect(generadorDeTokens.hash(a)).not.toBe(generadorDeTokens.hash(b));
   });
 });
+
+describe('limitador en memoria: memoria acotada', () => {
+  it('no recuerda sin límite las claves vencidas', () => {
+    let ahora = new Date('2026-11-18T10:00:00Z');
+    const limitador = crearLimitadorEnMemoria({
+      maximoDeFallos: 2,
+      ventanaMinutos: 1,
+      reloj: { ahora: () => ahora },
+    });
+    for (let i = 0; i < 10_000; i += 1) limitador.registrarFallo(`email:${i}@x.test`);
+    ahora = new Date('2026-11-18T10:05:00Z');
+    // Al llegar al tope, las vencidas se descartan y todo sigue funcionando.
+    limitador.registrarFallo('nuevo');
+    limitador.registrarFallo('nuevo');
+    expect(limitador.minutosDeBloqueo('nuevo')).toBeGreaterThan(0);
+    expect(limitador.minutosDeBloqueo('email:5@x.test')).toBe(0);
+  });
+});
