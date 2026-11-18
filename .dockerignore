@@ -1,0 +1,26 @@
+# Lo que no debe entrar al contexto de la imagen: dependencias, resultados, secretos y datos locales.
+node_modules
+.next
+dist
+out
+coverage
+test-results
+playwright-report
+.git
+.husky
+.claude
+.impeccable
+.env
+.env.*
+!.env.example
+.correos
+storage
+*.log
+*.md
+!README.md
+docs
+.capturas-temporales
+*.temporal.*
+tsconfig.tsbuildinfo
+docker-compose*.yml
+Dockerfile

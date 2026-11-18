@@ -1,0 +1,54 @@
+# LURIS en producción: exactamente DOS contenedores (§1, Fase 13).
+#   db  → PostgreSQL (datos y cola de trabajos)
+#   app → la web (Next.js) y el worker (consultas, documentos, avisos y WhatsApp)
+#
+# Uso:   cp .env.example .env   (completa los valores de la sección «Docker»)
+#        docker compose up -d --build
+# Antes de exponerlo a internet, ponle HTTPS delante (ver docs/docker.md).
+name: luris
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: luris
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en el archivo .env}
+      POSTGRES_DB: luris
+      TZ: America/Bogota
+    volumes:
+      # PostgreSQL 18+ guarda los datos en /var/lib/postgresql/<versión>/docker.
+      - luris-db:/var/lib/postgresql
+    # Sin puertos publicados: solo la app llega a la base, por la red interna de Compose.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U luris -d luris']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: .
+    image: luris:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Estos valores mandan sobre los del .env (que en desarrollo apuntan a localhost).
+      NODE_ENV: production
+      DATABASE_URL: postgresql://luris:${POSTGRES_PASSWORD}@db:5432/luris
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      CORREO_TRANSPORTE: ${CORREO_TRANSPORTE:-smtp}
+    ports:
+      - '${APP_PUERTO:-3000}:3000'
+    volumes:
+      - luris-documentos:/data/documentos
+    # El worker termina los trabajos en curso al apagarse (hasta 30 s).
+    stop_grace_period: 45s
+
+volumes:
+  luris-db:
+  luris-documentos:

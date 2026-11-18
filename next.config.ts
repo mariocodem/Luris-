@@ -9,6 +9,8 @@ const produccion = process.env.NODE_ENV === 'production';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Salida mínima para la imagen Docker (Fase 13): un servidor con solo lo que usa la web.
+  output: 'standalone',
   // Solo de servidor: se cargan desde node_modules, sin empaquetarlos. Baileys (WhatsApp) corre en el
   // worker y tiene dependencias opcionales que el empaquetador no sabe resolver.
   serverExternalPackages: ['pg-boss', '@whiskeysockets/baileys', 'nodemailer'],

@@ -281,6 +281,15 @@ detalle (arquitectura, reintentos, advertencias de WhatsApp y qué se probó) es
   dedicado: no es la API oficial de Meta y el número puede ser bloqueado. No se ha probado contra
   WhatsApp real.
 
+## Docker (Fase 13)
+
+`docker compose up -d --build` levanta **exactamente dos contenedores**: `db` (PostgreSQL con volumen y
+healthcheck, sin puertos publicados) y `app` (la web en modo `standalone`, el worker y el Chromium de
+Playwright, como usuario sin privilegios). Al arrancar aplica las migraciones y, con
+`SUPERADMIN_EMAIL` y `SUPERADMIN_CONTRASENA`, crea al primer operador. Los datos persisten en los
+volúmenes `luris-db` y `luris-documentos`. Pasos, respaldos y problemas frecuentes:
+[docs/docker.md](docs/docker.md).
+
 ## Endurecimiento (Fase 12)
 
 - **Seguridad**: cabeceras y CSP (producción), límites de intentos y de uso, cookies de sesión

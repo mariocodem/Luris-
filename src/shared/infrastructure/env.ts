@@ -124,6 +124,15 @@ const esquemaEnv = z
       })
       .optional(),
 
+    // ─── Primer superadministrador (Docker, Fase 13) ───────────────────────────
+    /**
+     * Con estas tres variables, el entrypoint del contenedor crea al operador de LURIS si aún no hay
+     * ninguno. Después del primer arranque, quita la contraseña del .env.
+     */
+    SUPERADMIN_EMAIL: z.string().min(3).optional(),
+    SUPERADMIN_NOMBRE: z.string().min(2).optional(),
+    SUPERADMIN_CONTRASENA: z.string().min(1).optional(),
+
     // ─── Documentos (§8) ───────────────────────────────────────────────────────
     /** Carpeta de los documentos descargados (en Docker, el volumen de la app). */
     ALMACEN_DIRECTORIO: z.string().min(1).default('storage/documentos'),

@@ -61,7 +61,13 @@ export default defineConfig({
   projects: [
     {
       name: 'escritorio',
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 860 } },
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 860 },
+        // Para usar un navegador ya instalado (p. ej. E2E_NAVEGADOR=msedge en Windows) en vez de
+        // descargar el Chromium de Playwright.
+        ...(process.env.E2E_NAVEGADOR && { channel: process.env.E2E_NAVEGADOR }),
+      },
     },
   ],
   // En orden: la app prepara la base e2e antes de que arranque el worker.

@@ -1,9 +1,4 @@
-import {
-  type Browser,
-  type BrowserContext,
-  type BrowserContextOptions,
-  chromium,
-} from 'playwright-core';
+import type { Browser, BrowserContext, BrowserContextOptions } from 'playwright-core';
 import { z } from 'zod';
 import type { Logger } from '@/shared/domain/logger';
 
@@ -50,11 +45,15 @@ export function crearNavegador(opciones: {
   let navegador: Promise<Browser> | null = null;
 
   function obtener(): Promise<Browser> {
-    navegador ??= chromium
-      .launch({
-        headless: true,
-        ...(opciones.canal !== 'chromium' && { channel: opciones.canal }),
-      })
+    // Playwright se carga aquí, al primer uso del worker: la web nunca lo carga (y la imagen Docker
+    // de la web no necesita sus navegadores ni su empaquetado).
+    navegador ??= import('playwright-core')
+      .then(({ chromium }) =>
+        chromium.launch({
+          headless: true,
+          ...(opciones.canal !== 'chromium' && { channel: opciones.canal }),
+        }),
+      )
       .catch((error: unknown) => {
         navegador = null;
         opciones.logger.error('No se pudo abrir el navegador automatizado', {

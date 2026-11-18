@@ -51,8 +51,11 @@ async function consultarAhora(page: Page): Promise<void> {
 /** El ejecutivo ya existe si corrió consulta.spec.ts; si no, se registra aquí. */
 async function abrirElEjecutivo(page: Page): Promise<void> {
   await page.goto(`/procesos?q=${RADICADO}`);
+  // Se espera a que la lista termine de cargar antes de decidir si el proceso existe.
+  await expect(page.getByRole('heading', { level: 1, name: 'Procesos' })).toBeVisible();
+  await page.waitForLoadState('networkidle');
   const enlace = visible(page.getByRole('link', { name: /Ejecutivo/ })).first();
-  if (!(await enlace.isVisible().catch(() => false))) {
+  if ((await visible(page.getByRole('link', { name: /Ejecutivo/ })).count()) === 0) {
     await page.goto('/procesos/nuevo');
     await page.getByRole('textbox', { name: /^Radicado/ }).fill(RADICADO);
     await page.getByRole('textbox', { name: 'Alias', exact: true }).fill('Ejecutivo Bancolombia');
