@@ -48,7 +48,9 @@ describe('almacén en disco', () => {
     expect(a.ruta).not.toBe(b.ruta);
   });
 
-  it('escribe con permisos restrictivos', async () => {
+  // Windows no aplica permisos POSIX (stat siempre informa 666/777); en Linux, donde corre el
+  // contenedor de producción, la prueba sí verifica 600/700.
+  it.skipIf(process.platform === 'win32')('escribe con permisos restrictivos', async () => {
     const almacen = crearAlmacenEnDisco({ directorio });
     const { ruta } = await almacen.guardar(DESPACHO, contenido);
     expect((await stat(path.join(directorio, ruta))).mode & 0o777).toBe(0o600);

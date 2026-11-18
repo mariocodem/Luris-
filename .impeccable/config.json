@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "tests/fixtures/samai/login.html"
+        ],
+        "createdAt": "2026-11-17T23:53:35.021Z",
+        "reason": "Claude: respuesta grabada del portal SAMAI usada como fixture de pruebas; no es una pantalla de LURIS"
+      },
+      {
+        "rule": "skipped-heading",
+        "value": "*",
+        "files": [
+          "tests/fixtures/samai/login.html"
+        ],
+        "createdAt": "2026-11-17T23:53:35.221Z",
+        "reason": "Claude: respuesta grabada del portal SAMAI usada como fixture de pruebas; no es una pantalla de LURIS"
+      }
+    ]
+  }
+}

@@ -38,11 +38,35 @@ export function mensajeDeErrorDePlataforma(
     case 'CREDENCIALES_INVALIDAS':
       return `Tu usuario ${deLaPlataforma(plataforma)} no fue aceptado. Actualiza la contraseña en Ajustes → Plataformas.`;
     case 'REQUIERE_INTERVENCION':
-      return `Para consultar ${nombre} hace falta que confirmes la consulta tú mismo. La encontrarás en «Pendientes de tu confirmación».`;
+      // SIUGJ pide un código de acceso al ingresar; el SPOA, que la persona resuelva el reto.
+      return INTERVENCION_DE_LA_PLATAFORMA[plataforma] === 'CODIGO_DE_ACCESO'
+        ? `${capitalizar(nombre)} pidió un código de acceso. Escribe el código que te llegó en Ajustes → Plataformas; después LURIS consultará el proceso solo.`
+        : `Para consultar ${nombre} hace falta que confirmes la consulta tú mismo. La encontrarás en «Pendientes de tu confirmación».`;
     case 'RESPUESTA_INESPERADA':
       return `${capitalizar(nombre)} respondió de una forma que no esperábamos. Ya quedó registrado para revisarlo; mientras tanto puedes consultar el proceso en su portal.`;
+    case 'SIN_ACCESO':
+      return `Tu cuenta no tiene acceso a este expediente en ${nombre}. Solicítalo al juzgado que lleva el proceso; cuando te lo concedan, LURIS lo consultará solo.`;
+    case 'SIN_CREDENCIAL':
+      return `Para consultar ${nombre} hace falta un usuario de la plataforma. Regístralo en Ajustes → Plataformas (el tuyo o el del despacho).`;
   }
 }
+
+/**
+ * Qué intervención de la persona hace falta cuando el error es REQUIERE_INTERVENCION:
+ * - CONSULTA_ASISTIDA: resolver ella misma el reto de la plataforma (SPOA, §6).
+ * - CODIGO_DE_ACCESO: escribir en LURIS el código del segundo factor que la plataforma le envió
+ *   (SIUGJ). LURIS nunca lee el correo ni evade el factor: lo entrega la persona.
+ */
+export type IntervencionRequerida = 'CONSULTA_ASISTIDA' | 'CODIGO_DE_ACCESO';
+
+/** Qué intervención pide cada plataforma cuando no puede seguir sola. */
+const INTERVENCION_DE_LA_PLATAFORMA: Readonly<Record<CodigoPlataforma, IntervencionRequerida>> = {
+  RAMA_CPNU: 'CONSULTA_ASISTIDA',
+  SPOA: 'CONSULTA_ASISTIDA',
+  SAMAI: 'CONSULTA_ASISTIDA',
+  SIUGJ: 'CODIGO_DE_ACCESO',
+  TYBA: 'CONSULTA_ASISTIDA',
+};
 
 function capitalizar(texto: string): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
@@ -71,12 +95,15 @@ export class ErrorPlataforma extends AppError {
   declare readonly codigo: CodigoErrorPlataforma;
   readonly plataforma: CodigoPlataforma;
   readonly transitorio: boolean;
+  /** Solo con REQUIERE_INTERVENCION: qué tiene que hacer la persona. */
+  readonly intervencion: IntervencionRequerida | null;
 
   constructor(
     plataforma: CodigoPlataforma,
     codigo: CodigoErrorPlataforma,
     detalleTecnico?: string,
     causa?: unknown,
+    intervencion: IntervencionRequerida | null = null,
   ) {
     super({
       codigo,
@@ -86,5 +113,6 @@ export class ErrorPlataforma extends AppError {
     });
     this.plataforma = plataforma;
     this.transitorio = esTransitorio(codigo);
+    this.intervencion = codigo === 'REQUIERE_INTERVENCION' ? intervencion : null;
   }
 }

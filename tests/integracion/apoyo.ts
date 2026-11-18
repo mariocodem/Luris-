@@ -124,6 +124,7 @@ export async function crearEscenarioDeDespacho(
   await prisma.pendienteDeConfirmacion.create({
     data: { despachoId, procesoId: proceso.id, plataforma: 'SPOA', origen: 'PROGRAMADA' },
   });
+  await prisma.sesionWhatsapp.create({ data: { despachoId } });
   const registro = await prisma.registroAuditoria.create({
     data: { despachoId, actorId: usuario.id, accion: 'PROCESO_CREADO' },
   });

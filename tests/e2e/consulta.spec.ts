@@ -1,4 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
+import pg from 'pg';
+import { urlDePruebas } from '../apoyo/base-de-datos';
 import { iniciarSesion, USUARIOS } from './apoyo';
 
 /**
@@ -60,6 +62,16 @@ test('la primera consulta trae la historia del proceso con las fechas oficiales'
   await expect(primera.locator('time').nth(1)).toHaveText('30/10/2026');
   // Es historia (carga inicial), no una novedad.
   await expect(visible(page.getByText('Nueva ·'))).toHaveCount(0);
+
+  // Origen: las actuaciones de Tyba lo dicen; las del sistema anterior, no.
+  await expect(primera).toContainText('Tyba, vía la Rama Judicial');
+  const delSistemaAnterior = visible(
+    page.getByRole('listitem').filter({ hasText: 'Rama Judicial (CPNU)' }),
+  );
+  await expect(delSistemaAnterior.first()).toBeVisible();
+  await expect(
+    visible(page.getByText('Tyba (Justicia XXI Web)', { exact: true })).first(),
+  ).toBeVisible();
 
   const plataformas = visible(page.getByRole('complementary', { name: 'Datos del proceso' }));
   await expect(plataformas.getByText('Consultado sin problemas')).toBeVisible();
@@ -147,4 +159,38 @@ test('quien no tiene asignado el proceso no puede consultarlo', async ({ page })
     page.getByRole('heading', { level: 1, name: 'Proceso no encontrado' }),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Consultar ahora' })).toHaveCount(0);
+});
+
+test('un documento de Tyba que la plataforma no entrega guía la descarga asistida', async ({
+  page,
+}) => {
+  const cliente = new pg.Client({
+    connectionString: urlDePruebas('_e2e', process.env.E2E_DATABASE_URL).toString(),
+  });
+  await cliente.connect();
+  try {
+    // La CPNU lista el documento pero no siempre lo entrega: queda «no disponible».
+    await cliente.query(
+      "UPDATE documentos SET estado = 'NO_DISPONIBLE' WHERE nombre LIKE '44AGREGAR%'",
+    );
+    await iniciarSesion(page, USUARIOS.administradora);
+    await page.goto(urlDelProceso);
+
+    const ayuda = visible(page.getByText(/número de certificación/));
+    await expect(ayuda.first()).toBeVisible();
+    const enlace = visible(page.getByRole('link', { name: /Abrir la descarga de Tyba/ })).first();
+    await expect(enlace).toHaveAttribute(
+      'href',
+      new RegExp('procesojudicial\\.ramajudicial\\.gov\\.co/.*frmDescargaArchivos'),
+    );
+    await expect(enlace).toHaveAttribute('target', '_blank');
+    await expect(enlace).toHaveAttribute('rel', /noopener/);
+    // El camino de regreso a LURIS existe: «Agregar documento» en la actuación.
+    await expect(visible(page.getByText('Agregar documento')).first()).toBeVisible();
+  } finally {
+    await cliente.query(
+      "UPDATE documentos SET estado = 'DESCARGADO' WHERE nombre LIKE '44AGREGAR%' AND ruta_almacenamiento IS NOT NULL",
+    );
+    await cliente.end();
+  }
 });

@@ -91,7 +91,8 @@ export function crearVerificadorSamai(opciones: {
           ? fallo('REQUIERE_INTERVENCION', 'SAMAI pidió un reto tras el ingreso')
           : fallo('CREDENCIALES_INVALIDAS', 'SAMAI no aceptó el usuario o la contraseña');
       }
-      return ok(undefined);
+      // La sesión de SAMAI no se reutiliza: su consulta es pública.
+      return ok({ sesion: null });
     },
   };
 }

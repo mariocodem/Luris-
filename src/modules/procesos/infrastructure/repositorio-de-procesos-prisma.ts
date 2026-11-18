@@ -285,6 +285,7 @@ export function crearRepositorioDeProcesos(paraDespacho: ParaDespacho): Reposito
             terminoInicia: true,
             terminoVence: true,
             tieneDocumentos: true,
+            origen: true,
             cargaInicial: true,
             detectadaEn: true,
             procesoPlataforma: { select: { plataforma: true } },

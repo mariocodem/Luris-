@@ -101,6 +101,8 @@ export interface ActuacionDeProceso {
   readonly terminoInicia: Date | null;
   readonly terminoVence: Date | null;
   readonly tieneDocumentos: boolean;
+  /** Sistema de origen si la actuación llegó por otra plataforma (TYBA por la CPNU). */
+  readonly origen: CodigoPlataforma | null;
   readonly documentos: readonly DocumentoDeActuacion[];
   /** Llegó después de la carga inicial, en los últimos DIAS_COMO_NUEVA días. */
   readonly nueva: boolean;

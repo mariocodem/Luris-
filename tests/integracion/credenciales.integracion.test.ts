@@ -186,3 +186,103 @@ describe('documentos subidos a mano', () => {
     ).rejects.toThrow();
   });
 });
+
+describe('credenciales con ingreso: cuenta por proceso, sesión y código (Fase 8)', () => {
+  async function proceso(despachoId: string): Promise<string> {
+    const nuevo = await prisma.proceso.create({
+      data: {
+        despachoId,
+        radicado: `0500131050${String(Date.now()).slice(-8)}12300`.slice(0, 23),
+        alias: 'Laboral',
+      },
+    });
+    return nuevo.id;
+  }
+
+  async function guardarPersonal(despachoId: string, membresiaId: string, usuario: string) {
+    return repo.guardar(despachoId, {
+      membresiaId,
+      plataforma: 'SIUGJ',
+      alcance: 'PERSONAL',
+      usuario,
+      secreto: secreto(3),
+      consentimientoEn: new Date(),
+    });
+  }
+
+  it('ordena las cuentas del proceso: responsable, otras personas asignadas activas y el despacho', async () => {
+    const procesoId = await proceso(a.despachoId);
+    const responsable = await miembro(a.despachoId);
+    const apoyo = await miembro(a.despachoId);
+    const inactiva = await miembro(a.despachoId);
+    const ajena = await miembro(a.despachoId);
+    await prisma.asignacionProceso.createMany({
+      data: [
+        { despachoId: a.despachoId, procesoId, membresiaId: apoyo, tipo: 'ASIGNADO' },
+        { despachoId: a.despachoId, procesoId, membresiaId: responsable, tipo: 'RESPONSABLE' },
+        { despachoId: a.despachoId, procesoId, membresiaId: inactiva, tipo: 'ASIGNADO' },
+      ],
+    });
+    await prisma.membresia.update({ where: { id: inactiva }, data: { activa: false } });
+    await repo.guardar(a.despachoId, {
+      membresiaId: ajena,
+      plataforma: 'SIUGJ',
+      alcance: 'DESPACHO',
+      usuario: 'cuenta.despacho',
+      secreto: secreto(4),
+      consentimientoEn: new Date(),
+    });
+    await guardarPersonal(a.despachoId, apoyo, 'cuenta.apoyo');
+    await guardarPersonal(a.despachoId, responsable, 'cuenta.responsable');
+    await guardarPersonal(a.despachoId, inactiva, 'cuenta.inactiva');
+    // La personal de quien no está asignado al proceso no se usa.
+    await guardarPersonal(a.despachoId, ajena, 'cuenta.ajena');
+
+    const cuentas = await repo.paraProceso(a.despachoId, procesoId, 'SIUGJ');
+    expect(cuentas.map((c) => c.usuario)).toEqual([
+      'cuenta.responsable',
+      'cuenta.apoyo',
+      'cuenta.despacho',
+    ]);
+    // Otro despacho no ve nada de este proceso.
+    expect(await repo.paraProceso(b.despachoId, procesoId, 'SIUGJ')).toEqual([]);
+    // Cada plataforma solo trae sus propias credenciales.
+    const deSamai = await repo.paraProceso(a.despachoId, procesoId, 'SAMAI');
+    expect(deSamai.every((c) => c.plataforma === 'SAMAI')).toBe(true);
+  });
+
+  it('guarda y borra la sesión cifrada, marca el código, y una contraseña nueva los reinicia', async () => {
+    const membresiaId = await miembro(a.despachoId);
+    const { id } = await guardarPersonal(a.despachoId, membresiaId, 'cuenta.sesion');
+    const marca = new Date('2026-11-17T15:00:00Z');
+
+    await repo.guardarSesion(a.despachoId, id, secreto(9), marca);
+    await repo.marcarCodigoSolicitado(a.despachoId, id, marca);
+    let guardada = await repo.buscar(a.despachoId, id);
+    expect([...(guardada?.sesion?.datos ?? [])]).toEqual([9, 9, 9, 9]);
+    expect(guardada?.codigoSolicitadoEn).toEqual(marca);
+    const [listada] = await repo.listar(a.despachoId, { membresiaId, incluirDelDespacho: false });
+    expect(listada?.codigoSolicitadoEn).toEqual(marca);
+    expect(listada).not.toHaveProperty('sesion');
+
+    // Otro despacho no puede tocarla.
+    await repo.guardarSesion(b.despachoId, id, null, marca);
+    expect((await repo.buscar(a.despachoId, id))?.sesion).not.toBeNull();
+
+    await guardarPersonal(a.despachoId, membresiaId, 'cuenta.sesion');
+    guardada = await repo.buscar(a.despachoId, id);
+    expect(guardada?.sesion).toBeNull();
+    expect(guardada?.codigoSolicitadoEn).toBeNull();
+  });
+
+  it('la base rechaza una sesión cifrada sin la versión de su clave', async () => {
+    const membresiaId = await miembro(a.despachoId);
+    const { id } = await guardarPersonal(a.despachoId, membresiaId, 'cuenta.check');
+    await expect(
+      prisma.credencialPlataforma.update({
+        where: { id },
+        data: { sesionCifrada: new Uint8Array([1]), sesionVersionClave: null },
+      }),
+    ).rejects.toThrow();
+  });
+});

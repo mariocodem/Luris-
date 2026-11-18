@@ -1,4 +1,11 @@
 import type { AlcanceDeLista } from '@/modules/procesos/application/puertos';
+import type { Asignacion } from '@/modules/procesos/domain/proceso';
+import type {
+  ConteoDeItems,
+  EstadoDeItem,
+  ResultadoDeItem,
+  ResumenDeItem,
+} from '../domain/consulta-masiva';
 import type { ActuacionConClave } from '../domain/actuaciones';
 import type { ResultadoConsulta } from '../domain/consulta';
 import type { CodigoErrorPlataforma } from '../domain/errores';
@@ -74,6 +81,15 @@ export interface RepositorioDeSincronizacion {
   procesosActivos(despachoId: string): Promise<readonly ProcesoASincronizar[]>;
 }
 
+/** Avisa (por correo y WhatsApp) de las actuaciones nuevas de un proceso (módulo de notificaciones). */
+export interface ProgramadorDeNotificaciones {
+  programar(datos: {
+    readonly despachoId: string;
+    readonly procesoId: string;
+    readonly actuacionIds: readonly string[];
+  }): Promise<number>;
+}
+
 // ─── Cola de trabajos ─────────────────────────────────────────────────────────
 
 export interface SolicitudDeSincronizacion {
@@ -112,6 +128,15 @@ export interface ColaDeTrabajos {
     plataforma: CodigoPlataforma,
     idTrabajo: string,
   ): Promise<TrabajoDeSincronizacion | null>;
+  /**
+   * Encola el código de acceso (segundo factor) que escribió la persona, cifrado: solo el worker
+   * lo descifra para entregarlo a la plataforma.
+   */
+  encolarCodigoDeAcceso(datos: {
+    readonly despachoId: string;
+    readonly credencialId: string;
+    readonly codigo: SecretoCifrado;
+  }): Promise<void>;
   /** Encola la prueba de acceso de una credencial recién guardada. */
   encolarVerificacion(datos: {
     readonly despachoId: string;
@@ -153,6 +178,14 @@ export interface RepositorioDePendientes {
     identificador: 'RADICADO' | 'NUNC',
     antesDe: Date,
   ): Promise<number>;
+  /**
+   * Abre un pendiente MASIVA por cada proceso y plataforma de una consulta masiva (§6). Si ya había
+   * uno abierto, lo deja como está. Devuelve cuántos abrió.
+   */
+  abrirDeConsultaMasiva(
+    despachoId: string,
+    pendientes: readonly { readonly procesoId: string; readonly plataforma: CodigoPlataforma }[],
+  ): Promise<number>;
   /** Cierra el pendiente abierto del proceso en esa plataforma, si lo hay. */
   resolver(
     despachoId: string,
@@ -191,6 +224,8 @@ export interface CredencialResumida {
   readonly actualizadoEn: Date;
   readonly verificadaEn: Date | null;
   readonly estadoVerificacion: EstadoConsulta | null;
+  /** La plataforma pidió un código de acceso y espera que la persona lo escriba. */
+  readonly codigoSolicitadoEn: Date | null;
 }
 
 export interface CredencialCifrada {
@@ -201,6 +236,9 @@ export interface CredencialCifrada {
   readonly membresiaId: string;
   readonly usuario: string;
   readonly secreto: SecretoCifrado;
+  /** Sesión de la plataforma guardada (cookies), cifrada. */
+  readonly sesion: SecretoCifrado | null;
+  readonly codigoSolicitadoEn: Date | null;
 }
 
 export interface RepositorioDeCredenciales {
@@ -226,10 +264,134 @@ export interface RepositorioDeCredenciales {
     },
   ): Promise<{ readonly id: string }>;
   eliminar(despachoId: string, id: string): Promise<void>;
+  /**
+   * Credenciales con las que se puede consultar un proceso, en orden de preferencia: la personal
+   * del abogado responsable, las personales de las demás personas asignadas y la del despacho.
+   */
+  paraProceso(
+    despachoId: string,
+    procesoId: string,
+    plataforma: CodigoPlataforma,
+  ): Promise<readonly CredencialCifrada[]>;
+  /** Guarda (o borra, con null) la sesión de la plataforma de la credencial. */
+  guardarSesion(
+    despachoId: string,
+    id: string,
+    sesion: SecretoCifrado | null,
+    ahora: Date,
+  ): Promise<void>;
+  /** Marca (o, con null, quita) la espera del código de acceso. */
+  marcarCodigoSolicitado(despachoId: string, id: string, en: Date | null): Promise<void>;
   registrarVerificacion(
     despachoId: string,
     id: string,
     estado: EstadoConsulta,
     ahora: Date,
   ): Promise<void>;
+}
+
+// ─── Consulta masiva (Fase 10, §7) ─────────────────────────────────────────────
+
+export interface ProcesoParaConsultaMasiva {
+  readonly id: string;
+  readonly radicado: string | null;
+  readonly nunc: string | null;
+  readonly activo: boolean;
+  /** Para decidir si la persona puede verlo (§5). */
+  readonly asignaciones: readonly Asignacion[];
+}
+
+export interface ItemNuevoDeConsultaMasiva {
+  readonly tipo: 'RADICADO' | 'NUNC';
+  readonly identificador: string;
+  readonly procesoId: string;
+  readonly plataforma: CodigoPlataforma;
+  /** PENDIENTE: lo consulta el worker. PENDIENTE_CONFIRMACION: lo confirma la persona (§6). */
+  readonly estado: 'PENDIENTE' | 'PENDIENTE_CONFIRMACION';
+}
+
+export interface LoteDeConsultaMasiva {
+  readonly id: string;
+  readonly creadaPorId: string;
+  readonly creadaPorNombre: string;
+  readonly estado: 'PENDIENTE' | 'EN_PROCESO' | 'COMPLETADA' | 'CANCELADA';
+  /** Procesos del lote (identificadores distintos), no ítems. */
+  readonly totalProcesos: number;
+  readonly iniciadaEn: Date | null;
+  readonly finalizadaEn: Date | null;
+  readonly creadoEn: Date;
+}
+
+export interface ItemDeConsultaMasiva {
+  readonly id: string;
+  readonly tipo: 'RADICADO' | 'NUNC';
+  readonly identificador: string;
+  readonly procesoId: string | null;
+  readonly alias: string | null;
+  readonly cliente: string | null;
+  readonly plataforma: CodigoPlataforma;
+  readonly estado: EstadoDeItem;
+  readonly resultado: EstadoConsulta | null;
+  readonly resumen: ResumenDeItem | null;
+  readonly actualizadoEn: Date;
+}
+
+export interface RepositorioDeConsultasMasivas {
+  /** Procesos del despacho que ya usan alguno de esos radicados o NUNC. */
+  procesosPorIdentificadores(
+    despachoId: string,
+    identificadores: { readonly radicados: readonly string[]; readonly nuncs: readonly string[] },
+  ): Promise<readonly ProcesoParaConsultaMasiva[]>;
+  /** Crea el lote y sus ítems en una transacción. Sin ítems por consultar, nace completada. */
+  crear(
+    despachoId: string,
+    datos: {
+      readonly creadaPorId: string;
+      readonly ahora: Date;
+      readonly totalProcesos: number;
+      readonly items: readonly ItemNuevoDeConsultaMasiva[];
+    },
+  ): Promise<{ readonly id: string }>;
+  buscar(despachoId: string, id: string): Promise<LoteDeConsultaMasiva | null>;
+  /** Los más recientes primero. Con `creadaPorId`, solo los de esa persona. */
+  listar(
+    despachoId: string,
+    filtro: { readonly creadaPorId: string | null },
+    limite: number,
+  ): Promise<readonly (LoteDeConsultaMasiva & { readonly conteo: ConteoDeItems })[]>;
+  items(despachoId: string, id: string): Promise<readonly ItemDeConsultaMasiva[]>;
+  conteo(despachoId: string, id: string): Promise<ConteoDeItems>;
+  /**
+   * Guarda cómo terminó la consulta de un proceso en una plataforma en todos los ítems que la
+   * esperan (de cualquier lote del despacho) y completa los lotes que ya no tengan nada por
+   * consultar. Devuelve cuántos ítems actualizó.
+   */
+  registrarResultado(
+    despachoId: string,
+    datos: {
+      readonly procesoId: string;
+      readonly plataforma: CodigoPlataforma;
+      readonly resultado: ResultadoDeItem;
+      readonly ahora: Date;
+    },
+  ): Promise<number>;
+  /** La persona confirmó una consulta asistida: sus ítems pendientes quedan completados. */
+  resolverAsistidos(
+    despachoId: string,
+    datos: {
+      readonly procesoId: string;
+      readonly plataforma: CodigoPlataforma;
+      readonly resumen: ResumenDeItem;
+      readonly ahora: Date;
+    },
+  ): Promise<number>;
+  /**
+   * Devuelve los ítems fallidos a la cola (y el lote a «en proceso») y lista lo que hay que
+   * volver a encolar. Con `itemId`, solo ese ítem.
+   */
+  reintentarFallidos(
+    despachoId: string,
+    id: string,
+    itemId: string | null,
+  ): Promise<readonly SolicitudDeSincronizacion[]>;
 }

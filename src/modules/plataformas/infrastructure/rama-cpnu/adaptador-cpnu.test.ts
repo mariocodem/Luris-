@@ -161,6 +161,27 @@ describe('adaptador CPNU: consulta', () => {
     expect(actuaciones.filter((a) => a.tieneDocumentos).length).toBeGreaterThan(0);
   });
 
+  it('marca como Tyba solo el expediente y las actuaciones de Justicia XXI Web', async () => {
+    const mixto = await cpnu().consultar(EJECUTIVO, {});
+    if (!mixto.ok) throw mixto.error;
+    const porExpediente = new Map(mixto.value.expedientes.map((e) => [e.idExterno, e]));
+    expect(porExpediente.get('107906391')?.sistema).toBe('TYBA');
+    expect(porExpediente.get('107912231')?.sistema).toBeUndefined();
+
+    const deTyba = mixto.value.actuaciones.filter((a) => a.origen === 'TYBA');
+    const delAnterior = mixto.value.actuaciones.filter((a) => a.origen === undefined);
+    // Tyba trae 52 actuaciones (2 páginas) y el sistema anterior, 21: cada una con su origen.
+    expect(deTyba).toHaveLength(52);
+    expect(delAnterior).toHaveLength(21);
+    expect(deTyba.every((a) => a.expediente === '107906391')).toBe(true);
+
+    // Un proceso que nunca estuvo en Tyba no lleva marca.
+    const tutela = await cpnu().consultar(TUTELA, {});
+    if (!tutela.ok) throw tutela.error;
+    expect(tutela.value.expedientes[0]?.sistema).toBeUndefined();
+    expect(tutela.value.actuaciones.some((a) => a.origen)).toBe(false);
+  });
+
   it('normaliza los nombres que la plataforma parte con saltos de línea', async () => {
     const resultado = await cpnu().consultar(EJECUTIVO, {});
     if (!resultado.ok) throw resultado.error;

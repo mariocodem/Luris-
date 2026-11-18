@@ -30,6 +30,8 @@ const ENTORNO = {
   LOG_LEVEL: 'warn',
   // La app sirve los documentos que guarda el worker: deben compartir el almacén.
   ALMACEN_DIRECTORIO: path.join(tmpdir(), 'luris-e2e-almacen'),
+  // Los correos (de cuenta y avisos) se guardan como archivos que las pruebas pueden leer.
+  CORREO_DIRECTORIO: path.join(tmpdir(), 'luris-e2e-correos'),
   // La consulta asistida del SPOA muestra un portal simulado, nunca el de la Fiscalía.
   SPOA_URL_PORTAL: `http://localhost:${PUERTO_CPNU_SIMULADA}/portal-spoa`,
   // SAMAI simulado (búsqueda pública e ingreso con cuenta).

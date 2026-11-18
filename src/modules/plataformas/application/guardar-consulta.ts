@@ -3,7 +3,12 @@ import { seleccionarNuevas } from '../domain/actuaciones';
 import type { ResultadoConsulta } from '../domain/consulta';
 import type { CodigoPlataforma } from '../domain/plataforma';
 import type { ResumenDeSincronizacion } from '../domain/sincronizacion';
-import type { ColaDeTrabajos, Reloj, RepositorioDeSincronizacion } from './puertos';
+import type {
+  ColaDeTrabajos,
+  ProgramadorDeNotificaciones,
+  Reloj,
+  RepositorioDeSincronizacion,
+} from './puertos';
 
 /**
  * En la primera consulta solo se piden los documentos de las actuaciones más recientes: traer los
@@ -19,6 +24,8 @@ export interface DependenciasDeGuardado {
   readonly conDocumentos: ReadonlySet<CodigoPlataforma>;
   readonly reloj: Reloj;
   readonly logger: Logger;
+  /** Si se da, las actuaciones nuevas (no las de la carga inicial) se avisan por los canales activos. */
+  readonly notificaciones?: ProgramadorDeNotificaciones;
 }
 
 /**
@@ -57,6 +64,24 @@ export async function guardarConsulta(
         despachoId,
         actuacionId: actuacion.id,
         plataforma: codigo,
+      });
+    }
+  }
+
+  // Solo lo nuevo se avisa: en la primera consulta las actuaciones son historia (§5 de la Fase 5).
+  if (deps.notificaciones && !cargaInicial && guardadas.length > 0) {
+    try {
+      await deps.notificaciones.programar({
+        despachoId,
+        procesoId,
+        actuacionIds: guardadas.map((a) => a.id),
+      });
+    } catch (error) {
+      // La consulta ya quedó guardada: un fallo al programar avisos no la deshace.
+      deps.logger.error('No se pudieron programar los avisos de actuaciones nuevas', {
+        despachoId,
+        procesoId,
+        error,
       });
     }
   }

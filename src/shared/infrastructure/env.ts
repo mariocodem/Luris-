@@ -23,13 +23,28 @@ const esquemaEnv = z
     INVITACION_HORAS_VIGENCIA: z.coerce.number().int().min(1).max(720).default(72),
     RECUPERACION_MINUTOS_VIGENCIA: z.coerce.number().int().min(5).max(1440).default(60),
     /**
-     * Cómo salen los correos de cuenta (invitaciones, recuperación de contraseña).
+     * Cómo salen los correos (cuenta y avisos de actuaciones).
      * - archivo: solo desarrollo; cada correo se guarda como .html en CORREO_DIRECTORIO.
-     * El adaptador SMTP llega en la Fase 11.
+     * - smtp: servidor SMTP (SMTP_*); obligatorio en producción.
      */
-    CORREO_TRANSPORTE: z.enum(['archivo']).default('archivo'),
+    CORREO_TRANSPORTE: z.enum(['archivo', 'smtp']).default('archivo'),
     CORREO_DIRECTORIO: z.string().default('.correos'),
     CORREO_REMITENTE: z.string().default('LURIS <no-responder@luris.test>'),
+    SMTP_HOST: z.string().min(1).optional(),
+    SMTP_PUERTO: z.coerce.number().int().min(1).max(65535).default(587),
+    /** TLS implícito (puerto 465). Si se omite, se usa solo con el puerto 465; en 587 se negocia STARTTLS. */
+    SMTP_SEGURO: z.stringbool().optional(),
+    SMTP_USUARIO: z.string().min(1).optional(),
+    SMTP_CLAVE: z.string().min(1).optional(),
+
+    // ─── Notificaciones (§9) ───────────────────────────────────────────────────
+    /** Hora (0-23, Bogotá) a la que sale el resumen diario de actuaciones nuevas. */
+    NOTIFICACIONES_HORA_RESUMEN: z.coerce.number().int().min(0).max(23).default(7),
+    /**
+     * Ritmo máximo de mensajes de WhatsApp por despacho. Bajo a propósito: la librería no es la API
+     * oficial y un ritmo alto puede hacer que bloqueen el número.
+     */
+    WHATSAPP_MENSAJES_POR_MINUTO: z.coerce.number().int().min(1).max(30).default(6),
 
     // ─── Plataformas judiciales (§6) ───────────────────────────────────────────
     /** API de la Consulta de Procesos Nacional Unificada (Rama Judicial). */
@@ -83,6 +98,18 @@ const esquemaEnv = z
     SAMAI_URL_BASE: z.url({ protocol: /^https?$/ }).default('https://samai.consejodeestado.gov.co'),
     SAMAI_SOLICITUDES_POR_MINUTO: z.coerce.number().int().min(1).max(600).default(10),
 
+    /** Portal de SIUGJ (usuarios externos, con la cuenta del abogado o del despacho). */
+    SIUGJ_URL_BASE: z.url({ protocol: /^https?$/ }).default('https://siugj.ramajudicial.gov.co'),
+    /**
+     * Navegador con que el worker abre SIUGJ: «chromium» (el de Playwright, en Docker) o el
+     * instalado en el equipo («msedge», «chrome»), útil en desarrollo.
+     */
+    SIUGJ_NAVEGADOR: z.enum(['chromium', 'msedge', 'chrome']).default('chromium'),
+    /** Ritmo conservador: cada consulta abre varias páginas del portal. */
+    SIUGJ_SOLICITUDES_POR_MINUTO: z.coerce.number().int().min(1).max(600).default(6),
+    /** Minutos que LURIS espera el código de acceso que SIUGJ envía a la persona. */
+    SIUGJ_MINUTOS_PARA_CODIGO: z.coerce.number().int().min(2).max(60).default(10),
+
     // ─── Credenciales de plataformas (§4, §6) ──────────────────────────────────
     /**
      * Clave AES-256-GCM (32 bytes en base64) con la que se cifran las contraseñas de plataformas
@@ -112,11 +139,19 @@ const esquemaEnv = z
         'El servicio oficial del SPOA necesita a la vez la URL y la credencial (o ninguna de las dos).',
     },
   )
-  // Hoy "archivo" es el único transporte: en producción no hay uno válido hasta la Fase 11.
-  .refine((env) => env.NODE_ENV !== 'production', {
+  .refine((env) => env.CORREO_TRANSPORTE !== 'smtp' || env.SMTP_HOST !== undefined, {
+    path: ['SMTP_HOST'],
+    message: 'Con CORREO_TRANSPORTE=smtp hay que indicar el servidor (SMTP_HOST).',
+  })
+  .refine((env) => (env.SMTP_USUARIO === undefined) === (env.SMTP_CLAVE === undefined), {
+    path: ['SMTP_CLAVE'],
+    message: 'El usuario y la clave del SMTP van juntos (o ninguno de los dos).',
+  })
+  // El transporte "archivo" guardaría en disco correos con enlaces de acceso.
+  .refine((env) => env.NODE_ENV !== 'production' || env.CORREO_TRANSPORTE !== 'archivo', {
     path: ['CORREO_TRANSPORTE'],
     message:
-      'El transporte "archivo" es solo para desarrollo: guardaría enlaces de acceso en disco. Configura SMTP (Fase 11).',
+      'El transporte "archivo" es solo para desarrollo: guardaría enlaces de acceso en disco. Configura CORREO_TRANSPORTE=smtp y SMTP_HOST.',
   })
   .transform((env) => ({
     ...env,

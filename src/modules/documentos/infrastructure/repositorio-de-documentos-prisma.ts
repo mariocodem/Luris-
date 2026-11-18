@@ -13,10 +13,17 @@ export function crearRepositorioDeDocumentos(
       if (!FORMATO_UUID.test(actuacionId)) return null;
       const actuacion = await paraDespacho(despachoId).actuacion.findUnique({
         where: { id: actuacionId },
-        select: { idExterno: true, procesoPlataforma: { select: { plataforma: true } } },
+        select: {
+          idExterno: true,
+          procesoPlataforma: { select: { plataforma: true, procesoId: true } },
+        },
       });
       if (!actuacion) return null;
-      return { plataforma: actuacion.procesoPlataforma.plataforma, idExterno: actuacion.idExterno };
+      return {
+        plataforma: actuacion.procesoPlataforma.plataforma,
+        idExterno: actuacion.idExterno,
+        procesoId: actuacion.procesoPlataforma.procesoId,
+      };
     },
 
     async registrarReferencias(despachoId, actuacionId, referencias) {

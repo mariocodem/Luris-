@@ -9,6 +9,7 @@ import type {
   SujetoProcesal,
 } from '../../domain/consulta';
 import { type CodigoErrorPlataforma, ErrorPlataforma } from '../../domain/errores';
+import { esExpedienteDeTyba } from '../../domain/tyba';
 import type { ContextoConsulta, PlataformaJudicial } from '../../domain/puertos';
 import type { ClienteHttp, FalloHttp } from '../http/cliente-http';
 import {
@@ -172,6 +173,9 @@ export function crearPlataformaCpnu(opciones: OpcionesCpnu): PlataformaJudicial 
         const lista = await actuacionesDe(proceso.idProceso, ctx);
         if (!lista.ok) return lista;
 
+        const ubicacion = limpiarTexto(detalle.value.ubicacion);
+        // Los expedientes de Tyba (Justicia XXI Web) llegan por la CPNU: se marcan para mostrarlos.
+        const sistema = esExpedienteDeTyba(ubicacion) ? ('TYBA' as const) : undefined;
         expedientes.push({
           idExterno: proceso.idProceso,
           despachoJudicial: limpiarTexto(detalle.value.despacho) ?? despachoJudicial,
@@ -181,13 +185,14 @@ export function crearPlataformaCpnu(opciones: OpcionesCpnu): PlataformaJudicial 
           claseProceso: limpiarTexto(detalle.value.claseProceso),
           subclaseProceso: limpiarTexto(detalle.value.subclaseProceso),
           recurso: limpiarTexto(detalle.value.recurso),
-          ubicacion: limpiarTexto(detalle.value.ubicacion),
+          ubicacion,
           fechaRadicacion: detalle.value.fechaProceso ?? proceso.fechaProceso,
           ultimaActuacion: proceso.fechaUltimaActuacion,
           sujetos,
           reservado: detalle.value.esPrivado === true,
           detalles: [],
           urlDeConsulta: null,
+          ...(sistema && { sistema }),
         });
         for (const a of lista.value) {
           const termino = terminoCoherente(a.fechaInicial, a.fechaFinal);
@@ -202,6 +207,7 @@ export function crearPlataformaCpnu(opciones: OpcionesCpnu): PlataformaJudicial 
             terminoInicia: termino.inicia,
             terminoVence: termino.vence,
             tieneDocumentos: a.conDocumentos === true,
+            ...(sistema && { origen: sistema }),
           });
         }
       }

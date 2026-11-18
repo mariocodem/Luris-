@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import path from 'node:path';
+import { iniciarSiugjSimulado } from '../apoyo/siugj-simulado';
 
 /**
  * Servicios de apoyo de las pruebas e2e (los arranca el `webServer` de playwright.config.ts):
@@ -186,9 +187,19 @@ servidor.listen(PUERTO, () => {
 });
 
 // El worker de LURIS, contra la CPNU simulada (el resto del entorno lo da playwright.config.ts).
+// SIUGJ simulado (ingreso con código de acceso, expedientes y documentos), en su propio puerto.
+const PUERTO_SIUGJ = PUERTO - 1;
+const siugj = await iniciarSiugjSimulado(PUERTO_SIUGJ);
+console.log(`SIUGJ simulado en ${siugj.url}`);
+
 const worker = spawn(process.execPath, ['--import', 'tsx', 'src/worker/index.ts'], {
   env: {
     ...process.env,
+    SIUGJ_URL_BASE: siugj.url,
+    SIUGJ_SOLICITUDES_POR_MINUTO: '600',
+    // En Windows, el Edge del equipo; en Linux (CI, Docker), el Chromium de Playwright.
+    SIUGJ_NAVEGADOR:
+      process.env.SIUGJ_NAVEGADOR ?? (process.platform === 'win32' ? 'msedge' : 'chromium'),
     CPNU_URL_BASE: `http://localhost:${PUERTO}${BASE}`,
     CPNU_SOLICITUDES_POR_MINUTO: '600',
     SAMAI_URL_BASE: `http://localhost:${PUERTO}${SAMAI}`,
@@ -222,6 +233,7 @@ worker.on('exit', (codigo) => {
 function detener(): void {
   worker.kill('SIGTERM');
   servidor.close();
+  void siugj.cerrar();
 }
 process.once('SIGINT', detener);
 process.once('SIGTERM', detener);

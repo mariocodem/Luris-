@@ -6,6 +6,7 @@ import {
   ALCANCES_DE_CREDENCIAL,
   PLATAFORMAS_CON_CREDENCIALES,
 } from '@/modules/plataformas/domain/credenciales';
+import { leerCodigoDeAcceso } from '@/modules/plataformas/application/codigo-de-acceso';
 import { esquemaId } from '@/modules/usuarios/domain/esquemas';
 import type { EstadoDeFormulario } from '@/shared/ui/estado-de-formulario';
 import { estadoDeError, estadoDeValidacion, textosDe } from '../../../_servidor/formularios';
@@ -64,6 +65,44 @@ export async function guardarCredencialAccion(
     tipo: 'exito',
     mensaje:
       'Credencial guardada. LURIS está probando el acceso: recarga la página en unos segundos para ver el resultado.',
+  };
+}
+
+export async function ingresarCodigoAccion(
+  _anterior: EstadoDeFormulario,
+  formulario: FormData,
+): Promise<EstadoDeFormulario> {
+  const datos = z
+    .object({
+      credencialId: esquemaId,
+      codigo: z
+        .string()
+        .trim()
+        .min(1, 'Escribe el código que te llegó.')
+        .refine((texto) => leerCodigoDeAcceso(texto) !== null, {
+          message: 'Escribe el código tal como te llegó: entre 4 y 12 letras o números.',
+        }),
+    })
+    .safeParse(textosDe(formulario));
+  // El código nunca se devuelve en el estado del formulario.
+  if (!datos.success) return estadoDeValidacion(datos.error);
+  try {
+    const casos = casosDeUso();
+    const sesion = await casos.obtenerContextoDeSesion();
+    if (!sesion.ok) return estadoDeError(sesion.error, 'codigo-de-acceso');
+    const resultado = await casos.ingresarCodigoDeAcceso(sesion.value, {
+      ...datos.data,
+      ip: await ipDeLaPeticion(),
+    });
+    if (!resultado.ok) return estadoDeError(resultado.error, 'codigo-de-acceso');
+  } catch (error) {
+    return estadoDeError(error, 'codigo-de-acceso');
+  }
+  refresh();
+  return {
+    tipo: 'exito',
+    mensaje:
+      'Código enviado. LURIS terminará de ingresar y consultará tus procesos; recarga la página en unos segundos para ver el resultado.',
   };
 }
 

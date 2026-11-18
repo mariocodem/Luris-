@@ -23,12 +23,22 @@ export const ACCIONES_DE_AUDITORIA = [
   'PROCESO_ASIGNACION_AGREGADA',
   'PROCESO_ASIGNACION_QUITADA',
   'PROCESOS_IMPORTADOS',
+  // Consulta masiva (Fase 10).
+  'CONSULTA_MASIVA_INICIADA',
+  'CONSULTA_MASIVA_REINTENTADA',
+  'CONSULTA_MASIVA_EXPORTADA',
+  // Notificaciones (Fase 11). Nunca se audita el número de teléfono.
+  'NOTIFICACIONES_PREFERENCIAS_ACTUALIZADAS',
+  'WHATSAPP_VINCULACION_SOLICITADA',
+  'WHATSAPP_DESVINCULADO',
   // Consultas asistidas (Fase 6): quién confirmó el resultado de una plataforma con reto.
   'PROCESO_CONSULTA_ASISTIDA',
   // Credenciales de plataformas y documentos (Fase 7). Nunca se audita el secreto.
   'CREDENCIAL_GUARDADA',
   'CREDENCIAL_ELIMINADA',
   'DOCUMENTO_AGREGADO',
+  // Código de acceso (segundo factor) que una persona entregó para terminar un ingreso (Fase 8).
+  'CODIGO_DE_ACCESO_INGRESADO',
 ] as const;
 
 export type AccionDeAuditoria = (typeof ACCIONES_DE_AUDITORIA)[number];

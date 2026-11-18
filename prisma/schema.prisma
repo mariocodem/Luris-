@@ -55,6 +55,10 @@ enum EstadoConsulta {
   REQUIERE_INTERVENCION
   LIMITE_DE_CONSULTAS
   RESPUESTA_INESPERADA
+  /// La cuenta entra a la plataforma pero no tiene acceso a ese expediente (SIUGJ).
+  SIN_ACCESO
+  /// La plataforma exige una cuenta y no hay ninguna registrada para el proceso.
+  SIN_CREDENCIAL
 
   @@map("estado_consulta")
 }
@@ -129,6 +133,18 @@ enum FrecuenciaNotificacion {
   @@map("frecuencia_notificacion")
 }
 
+/// Estado de la sesión de WhatsApp de un despacho (Fase 11, §9).
+enum EstadoSesionWhatsapp {
+  SIN_VINCULAR
+  /// Esperando que se escanee el QR.
+  VINCULANDO
+  CONECTADA
+  /// Vinculada, pero sin conexión ahora (se reconecta sola).
+  DESCONECTADA
+
+  @@map("estado_sesion_whatsapp")
+}
+
 enum EstadoNotificacion {
   PENDIENTE
   ENVIADA
@@ -161,6 +177,7 @@ model Despacho {
   etiquetas          Etiqueta[]
   registrosAuditoria RegistroAuditoria[]
   pendientes         PendienteDeConfirmacion[]
+  sesionWhatsapp     SesionWhatsapp?
 
   @@map("despachos")
 }
@@ -328,10 +345,11 @@ model Proceso {
 
   despacho Despacho @relation(fields: [despachoId], references: [id], onDelete: Cascade)
 
-  asignaciones AsignacionProceso[]
-  etiquetas    EtiquetaProceso[]
-  plataformas  ProcesoPlataforma[]
-  pendientes   PendienteDeConfirmacion[]
+  asignaciones          AsignacionProceso[]
+  etiquetas             EtiquetaProceso[]
+  plataformas           ProcesoPlataforma[]
+  pendientes            PendienteDeConfirmacion[]
+  itemsDeConsultaMasiva ItemConsultaMasiva[]
 
   @@unique([despachoId, radicado])
   @@unique([despachoId, nunc])
@@ -417,30 +435,33 @@ model ProcesoPlataforma {
 }
 
 model Actuacion {
-  id                  String    @id @default(uuid(7)) @db.Uuid
-  despachoId          String    @map("despacho_id") @db.Uuid
-  procesoPlataformaId String    @map("proceso_plataforma_id") @db.Uuid
-  idExterno           String?   @map("id_externo") @db.VarChar(100)
+  id                  String            @id @default(uuid(7)) @db.Uuid
+  despachoId          String            @map("despacho_id") @db.Uuid
+  procesoPlataformaId String            @map("proceso_plataforma_id") @db.Uuid
+  idExterno           String?           @map("id_externo") @db.VarChar(100)
   /// idExterno si la plataforma lo da; si no, un hash estable del contenido. Evita duplicados.
-  claveDeduplicacion  String    @map("clave_deduplicacion") @db.VarChar(100)
+  claveDeduplicacion  String            @map("clave_deduplicacion") @db.VarChar(100)
   /// Fecha oficial de la actuación, según la plataforma.
-  fechaActuacion      DateTime  @map("fecha_actuacion") @db.Date
+  fechaActuacion      DateTime          @map("fecha_actuacion") @db.Date
   /// Fecha oficial en que la plataforma registró la actuación (nula si la plataforma no la informa).
-  fechaRegistro       DateTime? @map("fecha_registro") @db.Date
+  fechaRegistro       DateTime?         @map("fecha_registro") @db.Date
   descripcion         String
   anotacion           String?
   /// Despacho judicial (juzgado, tribunal…) que registró la actuación, según la plataforma.
   /// No confundir con `despachoId`, el despacho de abogados dueño del dato.
-  despachoJudicial    String?   @map("despacho_judicial") @db.VarChar(200)
+  despachoJudicial    String?           @map("despacho_judicial") @db.VarChar(200)
   /// Término que corre por la actuación (fechas oficiales), si la plataforma lo informa.
-  terminoInicia       DateTime? @map("termino_inicia") @db.Date
-  terminoVence        DateTime? @map("termino_vence") @db.Date
-  tieneDocumentos     Boolean   @default(false) @map("tiene_documentos")
+  terminoInicia       DateTime?         @map("termino_inicia") @db.Date
+  terminoVence        DateTime?         @map("termino_vence") @db.Date
+  tieneDocumentos     Boolean           @default(false) @map("tiene_documentos")
+  /// Sistema de origen cuando la actuación llega por otra plataforma (TYBA por la CPNU); nulo si
+  /// la plataforma de la consulta es también su origen.
+  origen              CodigoPlataforma?
   /// true si llegó en la primera consulta del proceso en esa plataforma: es historia, no novedad,
   /// y no se notifica.
-  cargaInicial        Boolean   @default(false) @map("carga_inicial")
+  cargaInicial        Boolean           @default(false) @map("carga_inicial")
   /// Cuándo la detectó LURIS. SOLO auditoría: nunca se muestra como fecha de la actuación.
-  detectadaEn         DateTime  @default(now()) @map("detectada_en") @db.Timestamptz(3)
+  detectadaEn         DateTime          @default(now()) @map("detectada_en") @db.Timestamptz(3)
 
   procesoPlataforma ProcesoPlataforma @relation(fields: [procesoPlataformaId, despachoId], references: [id, despachoId], onDelete: Cascade)
   documentos        Documento[]
@@ -530,6 +551,13 @@ model CredencialPlataforma {
   /// Última vez que LURIS probó el acceso con ella, y cómo le fue (mismos códigos que las consultas).
   verificadaEn       DateTime?         @map("verificada_en") @db.Timestamptz(3)
   estadoVerificacion EstadoConsulta?   @map("estado_verificacion")
+  /// Sesión de la plataforma (cookies) cifrada con la clave de credenciales, para reutilizarla en
+  /// vez de ingresar en cada consulta (§6). Se borra al cambiar la credencial.
+  sesionCifrada      Bytes?            @map("sesion_cifrada")
+  sesionVersionClave Int?              @map("sesion_version_clave")
+  sesionGuardadaEn   DateTime?         @map("sesion_guardada_en") @db.Timestamptz(3)
+  /// Cuándo la plataforma pidió un código de acceso (segundo factor) que la persona debe escribir.
+  codigoSolicitadoEn DateTime?         @map("codigo_solicitado_en") @db.Timestamptz(3)
   creadoEn           DateTime          @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn      DateTime          @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 
@@ -552,6 +580,8 @@ model ConsultaMasiva {
   totalItems    Int                  @map("total_items")
   iniciadaEn    DateTime?            @map("iniciada_en") @db.Timestamptz(3)
   finalizadaEn  DateTime?            @map("finalizada_en") @db.Timestamptz(3)
+  /// Cuándo se avisó a quien la hizo que terminó (§7). Nulo = aún no se le avisa.
+  notificadaEn  DateTime?            @map("notificada_en") @db.Timestamptz(3)
   creadoEn      DateTime             @default(now()) @map("creado_en") @db.Timestamptz(3)
   actualizadoEn DateTime             @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 
@@ -571,6 +601,8 @@ model ItemConsultaMasiva {
   tipoIdentificador TipoIdentificador        @map("tipo_identificador")
   /// Radicado (23) o NUNC (21) normalizado, según tipoIdentificador (CHECK).
   identificador     String                   @db.VarChar(23)
+  /// El proceso del despacho que se consulta (el que ya existía o el que la consulta registró).
+  procesoId         String?                  @map("proceso_id") @db.Uuid
   plataforma        CodigoPlataforma
   estado            EstadoItemConsultaMasiva @default(PENDIENTE)
   resultado         EstadoConsulta?
@@ -581,9 +613,11 @@ model ItemConsultaMasiva {
   actualizadoEn     DateTime                 @updatedAt @map("actualizado_en") @db.Timestamptz(3)
 
   consultaMasiva ConsultaMasiva @relation(fields: [consultaMasivaId, despachoId], references: [id, despachoId], onDelete: Cascade)
+  proceso        Proceso?       @relation(fields: [procesoId, despachoId], references: [id, despachoId], onDelete: Cascade)
 
   @@unique([consultaMasivaId, identificador, plataforma])
   @@index([consultaMasivaId, estado])
+  @@index([despachoId, procesoId, plataforma, estado])
   @@map("items_consulta_masiva")
 }
 
@@ -634,6 +668,32 @@ model Notificacion {
   @@index([estado, programadaPara])
   @@index([membresiaId])
   @@map("notificaciones")
+}
+
+/// Sesión de WhatsApp del despacho (§9): un número dedicado vinculado por QR. Las credenciales y
+/// las claves de Baileys se guardan cifradas (AES-256-GCM) y nunca se registran en logs.
+model SesionWhatsapp {
+  id                      String               @id @default(uuid(7)) @db.Uuid
+  despachoId              String               @unique @map("despacho_id") @db.Uuid
+  estado                  EstadoSesionWhatsapp @default(SIN_VINCULAR)
+  /// Credenciales y claves de Signal en JSON cifrado. Nulo si no hay vinculación.
+  datosCifrados           Bytes?               @map("datos_cifrados")
+  versionClave            Int?                 @map("version_clave")
+  /// QR vigente, cifrado: quien lo escanee vincula su WhatsApp a LURIS.
+  qrCifrado               Bytes?               @map("qr_cifrado")
+  qrVersionClave          Int?                 @map("qr_version_clave")
+  qrGeneradoEn            DateTime?            @map("qr_generado_en") @db.Timestamptz(3)
+  /// Número vinculado (solo dígitos, formato internacional).
+  numero                  String?              @db.VarChar(15)
+  /// El administrador pidió vincular; el worker lo atiende y lo limpia.
+  vinculacionSolicitadaEn DateTime?            @map("vinculacion_solicitada_en") @db.Timestamptz(3)
+  conectadaEn             DateTime?            @map("conectada_en") @db.Timestamptz(3)
+  creadoEn                DateTime             @default(now()) @map("creado_en") @db.Timestamptz(3)
+  actualizadoEn           DateTime             @updatedAt @map("actualizado_en") @db.Timestamptz(3)
+
+  despacho Despacho @relation(fields: [despachoId], references: [id], onDelete: Cascade)
+
+  @@map("sesiones_whatsapp")
 }
 
 // ─── Auditoría ────────────────────────────────────────────────────────────────

@@ -39,7 +39,9 @@ function escenario(
   const guardados: string[] = [];
   const repositorio: RepositorioDeDocumentos = {
     async actuacionDeOrigen(_d, id) {
-      return id === ACTUACION ? { plataforma: 'RAMA_CPNU', idExterno: '3998715741' } : null;
+      return id === ACTUACION
+        ? { plataforma: 'RAMA_CPNU', idExterno: '3998715741', procesoId: 'proceso-1' }
+        : null;
     },
     async registrarReferencias(_d, _a, referencias) {
       for (const r of referencias) {

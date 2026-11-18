@@ -21,6 +21,9 @@ export default defineConfig({
           environment: 'node',
           include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
           exclude: PRUEBAS_DE_INTEGRACION,
+          // Las pruebas del adaptador de SIUGJ abren un navegador real: con todo corriendo a la
+          // vez, el arranque supera los 5 s por defecto.
+          testTimeout: 30_000,
         },
       },
       {

@@ -203,6 +203,84 @@ Detalles del spike en [docs/plataformas/samai.md](docs/plataformas/samai.md).
   resultado. Genera la clave con `openssl rand -base64 32`; si se pierde, hay que registrar de
   nuevo las credenciales.
 
+## SIUGJ (Fase 8)
+
+SIUGJ exige iniciar sesión con una cuenta de usuario externo, y a veces un **código de acceso**
+(segundo factor). Detalles del spike en [docs/plataformas/siugj.md](docs/plataformas/siugj.md).
+
+- **Con la cuenta del abogado**: el abogado registra su usuario de SIUGJ en Ajustes →
+  Plataformas (o el administrador, el del despacho). LURIS consulta cada proceso de la
+  especialidad laboral con la cuenta del responsable, luego con las de las personas asignadas y,
+  por último, con la del despacho.
+- **Navegador automatizado** (Playwright, `playwright-core`) en el worker, porque el portal
+  necesita JavaScript. La sesión se guarda cifrada y se reutiliza; solo se ingresa cuando vence.
+- **Código de acceso**: si SIUGJ lo pide, la consulta espera; la persona lo escribe en Ajustes →
+  Plataformas (también lo avisa «Pendientes») y LURIS termina de ingresar y sigue sola. LURIS
+  nunca lee el correo ni evade el factor.
+- **Sin acceso al expediente**: «Tu cuenta no tiene acceso a este expediente en SIUGJ.
+  Solicítalo al juzgado…». Sin cuenta registrada: dice dónde registrarla.
+- **Documentos** de las actuaciones: se descargan con la misma sesión, solo desde el propio SIUGJ.
+- **Provisional**: las pantallas posteriores al ingreso se modelaron sin una cuenta real
+  (`src/modules/plataformas/infrastructure/siugj/mapa-del-portal.ts`). Hay que confirmarlas con
+  una cuenta antes de usar SIUGJ en producción.
+- **Navegador**: `SIUGJ_NAVEGADOR=chromium` (instálalo con `pnpm exec playwright install
+chromium`) o, en desarrollo, el del equipo: `msedge` o `chrome`. Las pruebas del adaptador
+  usan Edge en Windows y Chromium en Linux, y se omiten si no hay navegador.
+
+## Tyba (Fase 9)
+
+Tyba (Justicia XXI Web) no tiene adaptador propio: sus actuaciones llegan por la CPNU, que ya las
+publica con las fechas oficiales. Detalles del spike en [docs/plataformas/tyba.md](docs/plataformas/tyba.md).
+
+- **Origen marcado**: el adaptador de la CPNU reconoce los expedientes de Tyba (ubicación
+  «Software: Justicia XXI Web») y marca el expediente y cada actuación. La ficha muestra «Tyba,
+  vía la Rama Judicial» y «Sistema: Tyba (Justicia XXI Web)». Las actuaciones ya guardadas se
+  marcan en la siguiente consulta, sin duplicarse.
+- **Documentos**: la CPNU los lista pero no los entrega, y la descarga pública de Tyba exige
+  resolver un reto que LURIS no resuelve ni evade. La ficha guía la descarga asistida (número de
+  certificación + radicado, enlace a la página de Tyba) y el documento se sube con «Agregar
+  documento».
+- **Acceso oficial**: la petición a la Rama Judicial para un mecanismo autorizado está en
+  [docs/solicitudes/rama-judicial-tyba-documentos.md](docs/solicitudes/rama-judicial-tyba-documentos.md).
+  Al concederse, se agrega como adaptador del puerto `DescargadorDeDocumentos`.
+
+## Consulta masiva (Fase 10)
+
+Hasta **400 procesos** en una sola operación. El funcionamiento, el diseño y las mediciones están
+en [docs/consulta-masiva.md](docs/consulta-masiva.md).
+
+- **Entrada**: pegar radicados o NUNC (uno o varios por línea, con o sin guiones) o subir un
+  Excel/CSV, en `/consulta-masiva`. Se normalizan, se validan, se quitan repetidos y se muestra el
+  resumen («398 válidos, 2 con error») antes de ejecutar. Los procesos que falten se registran.
+- **Ejecución asíncrona**: un trabajo por proceso y plataforma en las colas del worker, respetando
+  el límite por plataforma y el orden del §1. Los NUNC del SPOA (con reto) quedan en «Pendientes
+  de tu confirmación». Hace falta el worker (`pnpm worker:dev`).
+- **Progreso en vivo** con barra, conteo por estado y resultados parciales. Se puede cerrar la
+  página: el lote sigue y se retoma desde el historial. Los fallos pasajeros se reintentan solos;
+  los permanentes quedan con un mensaje claro y botón «Reintentar».
+- **Exportar** a Excel o CSV. Cada persona ve sus consultas; el administrador, las del despacho.
+- **Tiempo real**: `pnpm medir:cpnu radicados.txt` mide pocos radicados reales contra la CPNU y
+  calcula el lote de 400 (~90 min al ritmo por defecto de 20 solicitudes por minuto).
+
+## Notificaciones (Fase 11)
+
+Avisos de actuaciones nuevas por **correo** y **WhatsApp**, y del fin de una consulta masiva. El
+detalle (arquitectura, reintentos, advertencias de WhatsApp y qué se probó) está en
+[docs/notificaciones.md](docs/notificaciones.md).
+
+- **Qué y a quién**: solo lo nuevo (la primera consulta de un proceso es historia y no se avisa), con
+  las fechas **oficiales** de la plataforma, a las personas asignadas al proceso (o a las
+  administradoras si no hay nadie). Cada persona elige canales y frecuencia (de inmediato o resumen
+  diario) en **Notificaciones**.
+- **Garantías**: idempotente (nunca el mismo aviso dos veces por el mismo canal), con reintentos
+  de espera creciente y agrupación por proceso. Hace falta el worker (`pnpm worker:dev`).
+- **Correo**: React Email + SMTP (`CORREO_TRANSPORTE=smtp`, obligatorio en producción; ver
+  `.env.example`). En desarrollo, los correos se guardan como `.html` en `.correos/`.
+- **WhatsApp**: Baileys (no oficial) dentro del worker, vinculado por QR por el administrador en
+  Ajustes → WhatsApp del despacho, con la sesión cifrada con `CREDENCIALES_CLAVE`. Usa un número
+  dedicado: no es la API oficial de Meta y el número puede ser bloqueado. No se ha probado contra
+  WhatsApp real.
+
 ## Pruebas
 
 - **Unidad** (`*.test.ts`, junto al código): dominio e infraestructura pura, sin base de datos.
@@ -216,7 +294,8 @@ Detalles del spike en [docs/plataformas/samai.md](docs/plataformas/samai.md).
   la bandeja de pendientes, SAMAI, credenciales y documentos agregados a mano). Recrea la base
   `<DATABASE_URL>_e2e` con la semilla y levanta su propio servidor en el puerto 3100, el worker y
   una CPNU simulada con respuestas grabadas (puerto 3199, que también simula el portal del SPOA
-  y SAMAI): nunca consultan las plataformas reales.
+  y SAMAI): nunca consultan las plataformas reales. Incluyen un lote de 400 procesos
+  (`volumen-masivo.spec.ts`, ~4 minutos).
   Requiere `pnpm db:up` y que `pnpm dev` esté detenido (Next.js no admite dos servidores de
   desarrollo sobre la misma carpeta). La primera vez: `pnpm exec playwright install chromium`.
 

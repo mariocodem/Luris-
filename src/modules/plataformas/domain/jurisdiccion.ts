@@ -32,3 +32,13 @@ export function corporacionesDondeBuscar(radicado: string): readonly string[] {
     ? [origen]
     : [origen, CORPORACION_CONSEJO_DE_ESTADO];
 }
+
+/**
+ * Especialidad laboral (dígitos 8 y 9 del radicado = «05»). SIUGJ empezó por la jurisdicción
+ * ordinaria laboral (Sala de Casación Laboral, juzgados laborales del circuito y municipales de
+ * pequeñas causas; portal de SIUGJ, 17/11/2026). Es un filtro para no consultar SIUGJ con procesos
+ * que no pueden estar allí; se ampliará cuando SIUGJ sume especialidades.
+ */
+export function esDeLaEspecialidadLaboral(radicado: string): boolean {
+  return /^\d{23}$/.test(radicado) && radicado.slice(7, 9) === '05';
+}

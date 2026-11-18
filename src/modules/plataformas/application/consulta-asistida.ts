@@ -15,7 +15,11 @@ import { type CodigoPlataforma, NOMBRE_EN_FRASE } from '../domain/plataforma';
 import type { LectorDeConsultaAsistida } from '../domain/puertos';
 import { mensajeDeResumen } from '../domain/sincronizacion';
 import { type DependenciasDeGuardado, guardarConsulta } from './guardar-consulta';
-import type { PendienteDeConfirmacion, RepositorioDePendientes } from './puertos';
+import type {
+  PendienteDeConfirmacion,
+  RepositorioDeConsultasMasivas,
+  RepositorioDePendientes,
+} from './puertos';
 
 /**
  * Consulta asistida (§6) para las plataformas con reto (CAPTCHA), hoy el SPOA de la Fiscalía:
@@ -31,6 +35,8 @@ export interface DependenciasDeConsultaAsistida extends DependenciasDeGuardado {
   readonly lectores: ReadonlyMap<CodigoPlataforma, LectorDeConsultaAsistida>;
   readonly pendientes: RepositorioDePendientes;
   readonly auditoria: RegistradorDeAuditoria;
+  /** Si se da, los ítems de consulta masiva que esperaban esta confirmación quedan completados. */
+  readonly masivas?: Pick<RepositorioDeConsultasMasivas, 'resolverAsistidos'>;
 }
 
 export class ErrorSinIdentificadorParaPlataforma extends AppError {
@@ -148,7 +154,18 @@ export function crearConfirmarConsultaAsistida(deps: DependenciasDeConsultaAsist
     const resultado = lector.interpretar(solicitud.texto, numero);
     if (!resultado.ok) return resultado;
     const resumen = await guardarConsulta(deps, actor.despacho.id, procesoId, resultado.value);
-    await deps.pendientes.resolver(actor.despacho.id, procesoId, plataforma, deps.reloj.ahora());
+    const ahora = deps.reloj.ahora();
+    await deps.pendientes.resolver(actor.despacho.id, procesoId, plataforma, ahora);
+    await deps.masivas?.resolverAsistidos(actor.despacho.id, {
+      procesoId,
+      plataforma,
+      resumen: {
+        mensaje: mensajeDeResumen(plataforma, resumen),
+        nuevas: resumen.nuevas,
+        total: null,
+      },
+      ahora,
+    });
     await deps.auditoria.registrar({
       despachoId: actor.despacho.id,
       actorId: actor.usuarioId,

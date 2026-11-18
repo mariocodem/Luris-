@@ -1,11 +1,15 @@
 import type { Job } from 'pg-boss';
 import type { ServiciosDelWorker } from '@/composition-root';
+import type { ResultadoParaConsultaMasiva } from '@/modules/plataformas/application/consulta-masiva';
 import type { ResumenDeSincronizacion } from '@/modules/plataformas/domain/sincronizacion';
 import {
+  REINTENTOS_DE_SINCRONIZACION,
+  esquemaCodigoDeAcceso,
   esquemaDocumentos,
   esquemaSolicitud,
   esquemaVerificacion,
 } from '@/modules/plataformas/infrastructure/cola-pg-boss';
+import { esquemaDeTrabajoDeWhatsapp } from '@/modules/notificaciones/infrastructure/cola-pg-boss';
 import type { Logger } from '@/shared/domain/logger';
 
 /**
@@ -27,11 +31,44 @@ export function crearManejadores(servicios: ServiciosDelWorker, logger: Logger) 
         logger.error('Trabajo de sincronización con datos inválidos', { idTrabajo: trabajo.id });
         return { tipo: 'OMITIDO', motivo: 'PROCESO_NO_ENCONTRADO' };
       }
-      const resultado = await servicios.sincronizarProceso(solicitud.data, {
-        signal: trabajo.signal,
-      });
-      if (resultado.ok) return resultado.value;
+      const { despachoId, procesoId, plataforma } = solicitud.data;
+      const esElUltimoIntento = trabajo.retryCount >= REINTENTOS_DE_SINCRONIZACION;
+      // Deja el resultado en los ítems de consulta masiva que lo esperaban (nunca rompe el trabajo).
+      const avisar = async (resultado: ResultadoParaConsultaMasiva): Promise<void> => {
+        try {
+          await servicios.registrarResultadoDeConsultaMasiva({
+            despachoId,
+            procesoId,
+            plataforma,
+            resultado,
+          });
+        } catch (error) {
+          logger.warn('No se pudo registrar el resultado en la consulta masiva', {
+            despachoId,
+            procesoId,
+            plataforma,
+            error,
+          });
+        }
+      };
+
+      let resultado;
+      try {
+        resultado = await servicios.sincronizarProceso(solicitud.data, { signal: trabajo.signal });
+      } catch (error) {
+        if (esElUltimoIntento) await avisar({ tipo: 'FALLIDO', codigo: 'RESPUESTA_INESPERADA' });
+        throw error;
+      }
+      if (resultado.ok) {
+        await avisar(resultado.value);
+        return resultado.value;
+      }
       if (resultado.error.transitorio) {
+        await avisar(
+          esElUltimoIntento
+            ? { tipo: 'FALLIDO', codigo: resultado.error.codigo }
+            : { tipo: 'REINTENTO', codigo: resultado.error.codigo },
+        );
         throw new FalloPasajero(
           `${resultado.error.codigo}: ${resultado.error.detalleTecnico ?? ''}`,
         );
@@ -41,7 +78,9 @@ export function crearManejadores(servicios: ServiciosDelWorker, logger: Logger) 
         codigo: resultado.error.codigo,
         detalle: resultado.error.detalleTecnico,
       });
-      return { tipo: 'FALLIDO', codigo: resultado.error.codigo };
+      const fallido: ResumenDeSincronizacion = { tipo: 'FALLIDO', codigo: resultado.error.codigo };
+      await avisar(fallido);
+      return fallido;
     },
 
     async documentos(trabajo: Job<unknown>) {
@@ -72,8 +111,52 @@ export function crearManejadores(servicios: ServiciosDelWorker, logger: Logger) 
       if (!resultado.ok) throw new FalloPasajero(resultado.error.codigo);
     },
 
+    async codigoDeAcceso(trabajo: Job<unknown>) {
+      const datos = esquemaCodigoDeAcceso.safeParse(trabajo.data);
+      if (!datos.success) {
+        logger.error('Trabajo de código de acceso con datos inválidos', { idTrabajo: trabajo.id });
+        return;
+      }
+      const { despachoId, credencialId, codigo, version } = datos.data;
+      const resultado = await servicios.completarIngreso(
+        {
+          despachoId,
+          credencialId,
+          codigo: { datos: new Uint8Array(Buffer.from(codigo, 'base64')), version },
+        },
+        { signal: trabajo.signal },
+      );
+      // Nunca se registra el código: solo cómo terminó.
+      logger.info('Código de acceso procesado', {
+        despachoId,
+        credencialId,
+        resultado: resultado.ok ? resultado.value : resultado.error.codigo,
+      });
+      return { resultado: resultado.ok ? resultado.value : resultado.error.codigo };
+    },
+
     async programada() {
       return servicios.programarSincronizacion();
+    },
+
+    /** Envía los avisos que vencen y avisa de las consultas masivas terminadas (§9, §7). */
+    async despacharNotificaciones() {
+      return servicios.despacharNotificaciones();
+    },
+
+    async vincularWhatsapp(trabajo: Job<unknown>) {
+      const datos = esquemaDeTrabajoDeWhatsapp.safeParse(trabajo.data);
+      if (!datos.success || !servicios.gestorDeWhatsapp) {
+        logger.warn('No se puede vincular WhatsApp: datos inválidos o sin clave de cifrado');
+        return;
+      }
+      await servicios.gestorDeWhatsapp.vincular(datos.data.despachoId);
+    },
+
+    async desvincularWhatsapp(trabajo: Job<unknown>) {
+      const datos = esquemaDeTrabajoDeWhatsapp.safeParse(trabajo.data);
+      if (!datos.success || !servicios.gestorDeWhatsapp) return;
+      await servicios.gestorDeWhatsapp.desvincular(datos.data.despachoId);
     },
   };
 }

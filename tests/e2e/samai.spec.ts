@@ -55,21 +55,23 @@ test('el abogado guarda su cuenta de SAMAI cifrada, LURIS prueba el acceso y pue
   await page.getByRole('link', { name: /Cuentas en las plataformas/ }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Plataformas' })).toBeVisible();
 
-  const usuario = page.getByRole('textbox', { name: 'Usuario' });
-  const clave = page.getByLabel('Contraseña', { exact: true });
+  // Ajustes → Plataformas tiene una sección por plataforma (SAMAI, SIUGJ…).
+  const seccion = page.getByRole('region', { name: 'SAMAI' });
+  const usuario = seccion.getByRole('textbox', { name: 'Usuario' });
+  const clave = seccion.getByLabel('Contraseña', { exact: true });
 
   // Sin autorizar, no se guarda.
   await usuario.fill('abogado.samai');
   await clave.fill('clave-equivocada');
-  await page.getByRole('button', { name: 'Guardar credencial' }).click();
+  await seccion.getByRole('button', { name: 'Guardar credencial' }).click();
   await expect(
-    page.getByText('Para guardar la credencial debes autorizar a LURIS a usarla.'),
+    seccion.getByText('Para guardar la credencial debes autorizar a LURIS a usarla.'),
   ).toBeVisible();
 
   // Con una contraseña equivocada: se guarda y la prueba de acceso lo dice.
   await clave.fill('clave-equivocada');
-  await page.getByRole('checkbox', { name: /Autorizo a LURIS/ }).check();
-  await page.getByRole('button', { name: 'Guardar credencial' }).click();
+  await seccion.getByRole('checkbox', { name: /Autorizo a LURIS/ }).check();
+  await seccion.getByRole('button', { name: 'Guardar credencial' }).click();
   await expect(page.getByText(/Credencial guardada/).first()).toBeVisible();
   await expect(async () => {
     await page.reload();
@@ -81,20 +83,20 @@ test('el abogado guarda su cuenta de SAMAI cifrada, LURIS prueba el acceso y pue
   expect(await page.content()).not.toContain('clave-equivocada');
 
   // La reemplaza por la correcta.
-  await page.getByRole('textbox', { name: 'Usuario' }).fill('abogado.samai');
-  await page.getByLabel('Contraseña', { exact: true }).fill('clave-correcta');
-  await page.getByRole('checkbox', { name: /Autorizo a LURIS/ }).check();
-  await page.getByRole('button', { name: 'Reemplazar credencial' }).click();
+  await usuario.fill('abogado.samai');
+  await clave.fill('clave-correcta');
+  await seccion.getByRole('checkbox', { name: /Autorizo a LURIS/ }).check();
+  await seccion.getByRole('button', { name: 'Reemplazar credencial' }).click();
   await expect(async () => {
     await page.reload();
-    await expect(page.getByText('Acceso verificado')).toBeVisible({ timeout: 1_000 });
+    await expect(seccion.getByText('Acceso verificado')).toBeVisible({ timeout: 1_000 });
   }).toPass({ timeout: 30_000 });
 
-  await page.getByRole('button', { name: 'Eliminar' }).click();
+  await seccion.getByRole('button', { name: 'Eliminar' }).click();
   await page.getByRole('button', { name: 'Sí, eliminar' }).click();
   await expect(page.getByText('Credencial eliminada. LURIS ya no la usará.').first()).toBeVisible();
   await page.reload();
-  await expect(page.getByText('Acceso verificado')).toHaveCount(0);
+  await expect(seccion.getByText('Acceso verificado')).toHaveCount(0);
 });
 
 test('el asistente no gestiona credenciales', async ({ page }) => {

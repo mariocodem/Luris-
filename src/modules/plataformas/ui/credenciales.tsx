@@ -185,3 +185,56 @@ export function EliminarCredencial({
     </form>
   );
 }
+
+/**
+ * La plataforma (SIUGJ) pidió un código de acceso: la persona escribe el que le llegó. LURIS lo
+ * entrega una sola vez a la plataforma; nunca lo lee del correo ni lo guarda.
+ */
+export function FormularioDeCodigoDeAcceso({
+  credencialId,
+  plataforma,
+  venceA,
+  accion,
+}: {
+  readonly credencialId: string;
+  readonly plataforma: string;
+  /** Hora (texto para mostrar) hasta la que la plataforma espera el código. */
+  readonly venceA: string;
+  readonly accion: Accion;
+}) {
+  const [estado, enviar, enviando] = useActionState(accion, ESTADO_INICIAL);
+  useAvisoDeExito(estado);
+  if (estado.tipo === 'exito') return null;
+  return (
+    <form
+      action={enviar}
+      className="flex flex-col gap-3 rounded-lg border border-nuevo/50 bg-nuevo-suave px-4 py-3"
+    >
+      <input type="hidden" name="credencialId" value={credencialId} />
+      <p className="text-sm text-pretty">
+        <span className="font-semibold text-nuevo-texto">
+          {plataforma} pidió un código de acceso.
+        </span>{' '}
+        Escribe el que te llegó (por correo o mensaje) antes de las{' '}
+        <span className="cifras">{venceA}</span>. Después LURIS consultará tus procesos sola.
+      </p>
+      {estado.tipo === 'error' ? <AvisoDeFormulario estado={estado} /> : null}
+      <div className="flex flex-wrap items-end gap-3">
+        <Campo
+          etiqueta="Código de acceso"
+          name="codigo"
+          inputMode="text"
+          autoComplete="one-time-code"
+          maxLength={20}
+          required
+          className="w-44"
+          errores={erroresDe(estado, 'codigo')}
+        />
+        <Button type="submit" disabled={enviando}>
+          <KeyRound aria-hidden />
+          {enviando ? 'Enviando…' : 'Enviar código'}
+        </Button>
+      </div>
+    </form>
+  );
+}

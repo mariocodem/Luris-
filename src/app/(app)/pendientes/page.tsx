@@ -5,6 +5,7 @@ import {
   NOMBRES_DE_PLATAFORMA,
   type CodigoPlataforma,
 } from '@/modules/plataformas/domain/plataforma';
+import { esperaCodigoDeAcceso } from '@/modules/plataformas/domain/credenciales';
 import { nombreDeProceso } from '@/modules/procesos/domain/proceso';
 import { Identificadores } from '@/modules/procesos/ui/lista-de-procesos';
 import { formatearDia, formatearDiaYHora } from '@/shared/domain/fechas';
@@ -28,8 +29,25 @@ const RUTA_ASISTIDA: Partial<Record<CodigoPlataforma, string>> = { SPOA: 'spoa' 
  */
 export default async function PaginaDePendientes() {
   const sesion = await sesionDeLaPeticion();
-  const pendientes = await casosDeUso().listarPendientes(sesion);
+  const casos = casosDeUso();
+  const [pendientes, credenciales] = await Promise.all([
+    casos.listarPendientes(sesion),
+    casos.listarCredenciales(sesion),
+  ]);
   const lista = pendientes.ok ? pendientes.value : [];
+  // Plataformas que pidieron un código de acceso que esta persona puede escribir (SIUGJ).
+  const ahora = new Date();
+  const esperanCodigo = credenciales.ok
+    ? [
+        ...new Set(
+          credenciales.value
+            .filter((c) =>
+              esperaCodigoDeAcceso(c.codigoSolicitadoEn, ahora, casos.minutosParaCodigoDeAcceso),
+            )
+            .map((c) => NOMBRES_DE_PLATAFORMA[c.plataforma]),
+        ),
+      ]
+    : [];
 
   return (
     <>
@@ -37,6 +55,22 @@ export default async function PaginaDePendientes() {
         titulo="Pendientes de tu confirmación"
         descripcion="El SPOA de la Fiscalía pide resolver un reto en cada consulta, así que LURIS no puede consultarlo solo. Estos procesos esperan que hagas la consulta; LURIS guarda el resultado."
       />
+      {esperanCodigo.length > 0 ? (
+        <div
+          role="status"
+          className="flex flex-col gap-3 rounded-xl border border-nuevo/50 bg-nuevo-suave px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p className="text-sm text-pretty">
+            <span className="font-semibold text-nuevo-texto">
+              {esperanCodigo.join(' y ')} pidió un código de acceso.
+            </span>{' '}
+            Escríbelo para que LURIS siga consultando tus procesos.
+          </p>
+          <Button variant="outline" asChild>
+            <Link href="/ajustes/plataformas">Escribir el código</Link>
+          </Button>
+        </div>
+      ) : null}
       {!pendientes.ok ? (
         <p className="text-muted-foreground">{pendientes.error.mensajeUsuario}</p>
       ) : lista.length === 0 ? (

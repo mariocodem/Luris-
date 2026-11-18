@@ -47,6 +47,7 @@ const esquemaDatosGuardados = z.object({
       reservado: z.boolean(),
       detalles: z.array(z.object({ etiqueta: z.string(), valor: z.string() })).default([]),
       urlDeConsulta: z.string().nullable().default(null),
+      sistema: z.literal('TYBA').optional(),
     }),
   ),
 });

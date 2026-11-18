@@ -55,6 +55,7 @@ function Expediente({
     .filter((v) => v && !/^sin subclase/i.test(v) && !/^en general/i.test(v))
     .join(' · ');
   const filas: readonly (readonly [string, string | null])[] = [
+    ['Sistema', expediente.sistema === 'TYBA' ? 'Tyba (Justicia XXI Web)' : null],
     ['Clase', clase || null],
     ['Tipo', expediente.tipoProceso],
     ['Ponente', expediente.ponente],

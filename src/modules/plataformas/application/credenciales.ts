@@ -15,6 +15,7 @@ import { err, ok, type Result } from '@/shared/domain/result';
 import {
   type AlcanceDeCredencial,
   contextoDeCifrado,
+  contextoDeSesion,
   type PlataformaConCredenciales,
 } from '../domain/credenciales';
 import type { ErrorPlataforma } from '../domain/errores';
@@ -201,13 +202,27 @@ export function crearVerificarCredencial(deps: {
       return ok(undefined);
     }
 
-    const resultado = await verificador.verificar(credencial.usuario, secreto, ctx);
+    const resultado = await verificador.verificar(credencial.usuario, secreto, ctx, credencialId);
     if (!resultado.ok && resultado.error.transitorio) return resultado;
+    const ahora = deps.reloj.ahora();
+    if (!resultado.ok && resultado.error.intervencion === 'CODIGO_DE_ACCESO') {
+      // La plataforma envió un código a la persona: queda esperando que lo escriba.
+      await deps.credenciales.marcarCodigoSolicitado(despachoId, credencialId, ahora);
+    }
+    if (resultado.ok && resultado.value.sesion && deps.cifrador) {
+      // La sesión del ingreso de prueba sirve para la primera consulta (no se ingresa dos veces).
+      await deps.credenciales.guardarSesion(
+        despachoId,
+        credencialId,
+        deps.cifrador.cifrar(resultado.value.sesion, contextoDeSesion(credencialId)),
+        ahora,
+      );
+    }
     await deps.credenciales.registrarVerificacion(
       despachoId,
       credencialId,
       resultado.ok ? 'EXITOSA' : resultado.error.codigo,
-      deps.reloj.ahora(),
+      ahora,
     );
     return ok(undefined);
   };

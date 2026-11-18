@@ -1,4 +1,4 @@
-import { ChevronRight, KeyRound, Users } from 'lucide-react';
+import { ChevronRight, KeyRound, MessageCircle, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { nombreDelRol } from '@/modules/usuarios/application/correos';
@@ -86,6 +86,24 @@ export default async function PaginaDeAjustes() {
       {puede(sesion.perfil, 'CUENTAS_GESTIONAR') ? (
         <section aria-labelledby="titulo-despacho" className="flex flex-col gap-3">
           <TituloDeSeccion id="titulo-despacho">Despacho</TituloDeSeccion>
+          <Link
+            href="/ajustes/whatsapp"
+            className="group flex items-center gap-4 rounded-xl border border-border bg-card px-5 py-4 transition-colors duration-150 hover:border-input hover:bg-accent"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+              <MessageCircle className="size-5" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">WhatsApp del despacho</span>
+              <span className="block text-sm text-muted-foreground">
+                Vincula un número dedicado para avisar de las actuaciones nuevas.
+              </span>
+            </span>
+            <ChevronRight
+              className="size-5 text-muted-foreground transition-transform duration-150 group-hover:translate-x-0.5"
+              aria-hidden
+            />
+          </Link>
           <Link
             href="/ajustes/usuarios"
             className="group flex items-center gap-4 rounded-xl border border-border bg-card px-5 py-4 transition-colors duration-150 hover:border-input hover:bg-accent"

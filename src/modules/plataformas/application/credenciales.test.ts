@@ -78,12 +78,20 @@ function escenario(opciones: { cifrado?: boolean } = {}) {
           actualizadoEn: new Date(),
           verificadaEn: null,
           estadoVerificacion: c.estado,
+          codigoSolicitadoEn: c.codigoSolicitadoEn,
         }));
     },
     buscar: async (_d, id) => filas.get(id) ?? null,
     async guardar(despachoId, datos) {
       const id = `c-${datos.alcance}-${datos.membresiaId}`;
-      filas.set(id, { id, despachoId, ...datos, estado: null });
+      filas.set(id, {
+        id,
+        despachoId,
+        ...datos,
+        sesion: null,
+        codigoSolicitadoEn: null,
+        estado: null,
+      });
       return { id };
     },
     async eliminar(_d, id) {
@@ -93,6 +101,9 @@ function escenario(opciones: { cifrado?: boolean } = {}) {
       const fila = filas.get(id);
       if (fila) fila.estado = estado;
     },
+    paraProceso: () => Promise.resolve([]),
+    guardarSesion: () => Promise.resolve(),
+    marcarCodigoSolicitado: () => Promise.resolve(),
   };
   const cola = {
     async encolarVerificacion({ credencialId }: { credencialId: string }) {
@@ -241,11 +252,14 @@ describe('probar el acceso', () => {
         const fila = e.filas.get(id);
         if (fila) fila.estado = estado;
       },
+      paraProceso: () => Promise.resolve([]),
+      guardarSesion: () => Promise.resolve(),
+      marcarCodigoSolicitado: () => Promise.resolve(),
     };
   }
 
   it('descifra solo para usarla y registra el acceso verificado', async () => {
-    const { r, recibidos, estado } = await probar(ok(undefined));
+    const { r, recibidos, estado } = await probar(ok({ sesion: null }));
     expect(r.ok).toBe(true);
     expect(recibidos).toEqual(['abogada.samai:clave-secreta']);
     expect(estado).toBe('EXITOSA');

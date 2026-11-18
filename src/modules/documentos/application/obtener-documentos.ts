@@ -40,6 +40,8 @@ export function crearObtenerDocumentos(deps: DependenciasDeObtencion) {
     const actuacion = await deps.documentos.actuacionDeOrigen(despachoId, actuacionId);
     const descargador = actuacion ? deps.descargadores.get(actuacion.plataforma) : undefined;
     if (!actuacion?.idExterno || !descargador) return ok({ descargados: 0, noDisponibles: 0 });
+    // Las plataformas con ingreso (SIUGJ) eligen la cuenta según el proceso.
+    ctx = { ...ctx, alcance: { despachoId, procesoId: actuacion.procesoId } };
 
     const referencias = await descargador.listar(actuacion.idExterno, ctx);
     if (!referencias.ok) return err(referencias.error);

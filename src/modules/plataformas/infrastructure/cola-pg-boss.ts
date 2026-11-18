@@ -22,6 +22,7 @@ export const NOMBRES_DE_COLA = {
   documentos: (plataforma: CodigoPlataforma) => `documentos-${sufijo(plataforma)}`,
   programada: 'sincronizacion-programada',
   verificarCredencial: 'verificar-credencial',
+  codigoDeAcceso: 'codigo-de-acceso',
 } as const;
 
 /** Prioridad de lo que pide una persona («Consultar ahora») frente a lo programado. */
@@ -31,9 +32,12 @@ const PRIORIDAD_ALTA = 10;
  * - stately: a lo sumo un trabajo en espera y uno en curso por proceso (singletonKey).
  * - Reintentos con espera exponencial: 1, 2, 4, 8 y 16 minutos (con variación), tope de 1 hora.
  */
+/** Reintentos de una sincronización con fallo pasajero (después, queda como fallida). */
+export const REINTENTOS_DE_SINCRONIZACION = 5;
+
 const OPCIONES_SINCRONIZAR: Omit<Queue, 'name'> = {
   policy: 'stately',
-  retryLimit: 5,
+  retryLimit: REINTENTOS_DE_SINCRONIZACION,
   retryDelay: 60,
   retryBackoff: true,
   retryDelayMax: 3600,
@@ -76,6 +80,14 @@ export async function asegurarColas(
     retryBackoff: true,
     expireInSeconds: 300,
   });
+  // El código de acceso vence en minutos: un solo intento, sin reintentos (otro intento con el
+  // mismo código fallaría y podría bloquear la cuenta).
+  await boss.createQueue(NOMBRES_DE_COLA.codigoDeAcceso, {
+    policy: 'stately',
+    retryLimit: 0,
+    expireInSeconds: 300,
+    deleteAfterSeconds: 3600,
+  });
 }
 
 // ─── Datos de los trabajos (validados al leerlos: vienen de la base de datos) ──────
@@ -89,6 +101,14 @@ export const esquemaSolicitud = z.object({
 export const esquemaVerificacion = z.object({
   despachoId: z.uuid(),
   credencialId: z.uuid(),
+});
+
+/** El código viaja cifrado (AES-256-GCM) en base64: nunca en claro en la base de la cola. */
+export const esquemaCodigoDeAcceso = z.object({
+  despachoId: z.uuid(),
+  credencialId: z.uuid(),
+  codigo: z.base64(),
+  version: z.number().int().positive(),
 });
 
 export const esquemaDocumentos = z.object({
@@ -205,6 +225,20 @@ export function crearColaDeTrabajos(obtenerBoss: () => Promise<PgBoss>): ColaDeT
         {
           singletonKey: datos.credencialId,
         },
+      );
+    },
+
+    async encolarCodigoDeAcceso(datos) {
+      const boss = await obtenerBoss();
+      await boss.send(
+        NOMBRES_DE_COLA.codigoDeAcceso,
+        {
+          despachoId: datos.despachoId,
+          credencialId: datos.credencialId,
+          codigo: Buffer.from(datos.codigo.datos).toString('base64'),
+          version: datos.codigo.version,
+        },
+        { singletonKey: datos.credencialId },
       );
     },
 

@@ -288,6 +288,53 @@ describe('ficha del proceso con lo sincronizado', () => {
   });
 });
 
+describe('origen Tyba de las actuaciones (Fase 9)', () => {
+  const origenes = async (procesoId: string) =>
+    (
+      await prisma.actuacion.findMany({
+        where: { procesoPlataforma: { procesoId } },
+        select: { idExterno: true, origen: true },
+        orderBy: { idExterno: 'asc' },
+      })
+    ).map((fila) => [fila.idExterno, fila.origen]);
+
+  it('guarda el origen de las nuevas y marca las ya guardadas sin duplicarlas', async () => {
+    const procesoId = await procesoNuevo(a.despachoId);
+    // Una consulta anterior a la marca de origen: sin origen.
+    await guardar(a.despachoId, procesoId, [actuacion('1'), actuacion('2')]);
+    expect(await origenes(procesoId)).toEqual([
+      ['1', null],
+      ['2', null],
+    ]);
+
+    // La consulta siguiente ya trae el origen: marca las guardadas y guarda la nueva con él.
+    const consulta = [
+      actuacion('1', { origen: 'TYBA' }),
+      actuacion('2', { origen: 'TYBA' }),
+      actuacion('3', { origen: 'TYBA' }),
+    ];
+    const nuevas = await guardar(a.despachoId, procesoId, consulta, false);
+    expect(nuevas.map((n) => n.clave)).toEqual(['3']);
+    expect(await origenes(procesoId)).toEqual([
+      ['1', 'TYBA'],
+      ['2', 'TYBA'],
+      ['3', 'TYBA'],
+    ]);
+  });
+
+  it('no toca el origen de las actuaciones de otro proceso ni las que no lo traen', async () => {
+    const mio = await procesoNuevo(a.despachoId);
+    const ajeno = await procesoNuevo(b.despachoId);
+    await guardar(a.despachoId, mio, [actuacion('7'), actuacion('8', { origen: 'TYBA' })]);
+    await guardar(b.despachoId, ajeno, [actuacion('7')]);
+    expect(await origenes(mio)).toEqual([
+      ['7', null],
+      ['8', 'TYBA'],
+    ]);
+    expect(await origenes(ajeno)).toEqual([['7', null]]);
+  });
+});
+
 describe('repositorio de documentos', () => {
   it('registra referencias una sola vez, las descarga y solo deja abrirlas desde su despacho', async () => {
     const procesoId = await procesoNuevo(a.despachoId);
@@ -306,6 +353,7 @@ describe('repositorio de documentos', () => {
     expect(await documentos.actuacionDeOrigen(a.despachoId, guardada.id)).toEqual({
       plataforma: 'RAMA_CPNU',
       idExterno: '50',
+      procesoId,
     });
     const pendientes = await documentos.pendientes(a.despachoId, guardada.id);
     expect(pendientes.map((d) => d.idExterno)).toEqual(['d1', 'd2']);

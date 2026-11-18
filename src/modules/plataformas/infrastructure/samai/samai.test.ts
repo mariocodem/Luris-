@@ -210,7 +210,7 @@ function samaiSimulado(opciones: { reto?: boolean } = {}) {
 describe('verificador de acceso a SAMAI', () => {
   it('ingresa con el formulario real: envía su estado oculto, el usuario y la contraseña, y conserva las cookies', async () => {
     const { verificador, peticiones } = samaiSimulado();
-    const r = await verificador.verificar('abogada', 'correcta', {});
+    const r = await verificador.verificar('abogada', 'correcta', {}, 'credencial-1');
     expect(r.ok).toBe(true);
 
     const [inicio, envio, destino] = peticiones;
@@ -227,13 +227,23 @@ describe('verificador de acceso a SAMAI', () => {
   });
 
   it('si vuelve al formulario de ingreso, la contraseña no fue aceptada', async () => {
-    const r = await samaiSimulado().verificador.verificar('abogada', 'equivocada', {});
+    const r = await samaiSimulado().verificador.verificar(
+      'abogada',
+      'equivocada',
+      {},
+      'credencial-1',
+    );
     expect(r.ok || r.error.codigo).toBe('CREDENCIALES_INVALIDAS');
     expect(!r.ok && r.error.detalleTecnico).not.toContain('equivocada');
   });
 
   it('si SAMAI pide un reto, no lo resuelve: requiere a la persona', async () => {
-    const r = await samaiSimulado({ reto: true }).verificador.verificar('abogada', 'mala', {});
+    const r = await samaiSimulado({ reto: true }).verificador.verificar(
+      'abogada',
+      'mala',
+      {},
+      'credencial-1',
+    );
     expect(r.ok || r.error.codigo).toBe('REQUIERE_INTERVENCION');
   });
 
@@ -252,7 +262,7 @@ describe('verificador de acceso a SAMAI', () => {
           fetch,
         }),
     });
-    const r = await verificador.verificar('abogada', 'correcta', {});
+    const r = await verificador.verificar('abogada', 'correcta', {}, 'credencial-1');
     expect(r.ok || r.error.codigo).toBe('RESPUESTA_INESPERADA');
     expect(fetch).toHaveBeenCalledTimes(1);
   });

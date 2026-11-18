@@ -24,6 +24,8 @@ export interface AlmacenDeArchivos {
 export interface ActuacionDeOrigen {
   readonly plataforma: CodigoPlataforma;
   readonly idExterno: string | null;
+  /** Proceso de la actuación (las plataformas con ingreso eligen la cuenta según el proceso). */
+  readonly procesoId: string;
 }
 
 export interface DocumentoPendiente {

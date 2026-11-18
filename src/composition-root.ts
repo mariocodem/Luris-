@@ -25,13 +25,28 @@ import {
   crearListarCredenciales,
   crearVerificarCredencial,
 } from '@/modules/plataformas/application/credenciales';
+import {
+  crearCompletarIngreso,
+  crearIngresarCodigoDeAcceso,
+} from '@/modules/plataformas/application/codigo-de-acceso';
 import type { CifradorDeCredenciales } from '@/modules/plataformas/application/puertos';
+import { crearProveedorDeCuentas } from '@/modules/plataformas/application/proveedor-de-cuentas';
 import {
   crearConfirmarConsultaAsistida,
   crearInterpretarConsultaAsistida,
   crearListarPendientes,
   crearPrepararConsultaAsistida,
 } from '@/modules/plataformas/application/consulta-asistida';
+import {
+  crearIniciarConsultaMasiva,
+  crearListarConsultasMasivas,
+  crearObtenerConsultaMasiva,
+  crearConsultarAvanceDeConsultaMasiva,
+  crearPrepararExportacionDeConsultaMasiva,
+  crearPrevisualizarConsultaMasiva,
+  crearRegistrarResultadoDeConsultaMasiva,
+  crearReintentarConsultaMasiva,
+} from '@/modules/plataformas/application/consulta-masiva';
 import {
   crearProgramarSincronizacion,
   type PlataformaAsistida,
@@ -42,9 +57,13 @@ import {
   crearSolicitarConsulta,
   type PlataformaAutomatica,
 } from '@/modules/plataformas/application/solicitar-consulta';
-import { esDeLoContenciosoAdministrativo } from '@/modules/plataformas/domain/jurisdiccion';
+import {
+  esDeLaEspecialidadLaboral,
+  esDeLoContenciosoAdministrativo,
+} from '@/modules/plataformas/domain/jurisdiccion';
 import type { CodigoPlataforma } from '@/modules/plataformas/domain/plataforma';
 import type {
+  CompletadorDeIngreso,
   DescargadorDeDocumentos,
   LectorDeConsultaAsistida,
   PlataformaJudicial,
@@ -60,12 +79,15 @@ import { crearSesionWeb } from '@/modules/plataformas/infrastructure/http/sesion
 import { crearPlataformaCpnu } from '@/modules/plataformas/infrastructure/rama-cpnu/adaptador-cpnu';
 import { crearDescargadorCpnu } from '@/modules/plataformas/infrastructure/rama-cpnu/descargador-cpnu';
 import { crearRepositorioDeCredenciales } from '@/modules/plataformas/infrastructure/repositorio-de-credenciales-prisma';
+import { crearRepositorioDeConsultasMasivas } from '@/modules/plataformas/infrastructure/repositorio-de-consultas-masivas-prisma';
 import { crearRepositorioDePendientes } from '@/modules/plataformas/infrastructure/repositorio-de-pendientes-prisma';
 import { crearPlataformaSamai } from '@/modules/plataformas/infrastructure/samai/adaptador-samai';
 import { crearVerificadorSamai } from '@/modules/plataformas/infrastructure/samai/verificador-samai';
 import { crearRepositorioDeSincronizacion } from '@/modules/plataformas/infrastructure/repositorio-de-sincronizacion-prisma';
 import { crearPlataformaSpoaOficial } from '@/modules/plataformas/infrastructure/spoa/adaptador-spoa-oficial';
 import { crearLectorSpoa } from '@/modules/plataformas/infrastructure/spoa/lector-de-texto-spoa';
+import { crearAdaptadorSiugj } from '@/modules/plataformas/infrastructure/siugj/adaptador-siugj';
+import { crearNavegador } from '@/modules/plataformas/infrastructure/siugj/navegador';
 import { crearCambiarEstadoDeProceso } from '@/modules/procesos/application/archivar-proceso';
 import {
   crearAgregarAsignado,
@@ -89,6 +111,32 @@ import {
   crearRepositorioDeProcesos,
 } from '@/modules/procesos/infrastructure/repositorio-de-procesos-prisma';
 import { crearEnviadorEnArchivo } from '@/modules/notificaciones/infrastructure/email/enviador-en-archivo';
+import { crearEnviadorSmtp } from '@/modules/notificaciones/infrastructure/email/enviador-smtp';
+import { crearNotificadorDeCorreo } from '@/modules/notificaciones/infrastructure/email/notificador-de-correo';
+import { crearDespacharNotificaciones } from '@/modules/notificaciones/application/despachar-notificaciones';
+import {
+  crearGuardarPreferencias,
+  crearListarNotificaciones,
+  crearObtenerPreferencias,
+} from '@/modules/notificaciones/application/preferencias';
+import { crearProgramarNotificaciones } from '@/modules/notificaciones/application/programar-notificaciones';
+import {
+  crearDesvincularWhatsapp,
+  crearObtenerEstadoDeWhatsapp,
+  crearVincularWhatsapp,
+} from '@/modules/notificaciones/application/whatsapp';
+import type { Notificador } from '@/modules/notificaciones/domain/notificador';
+import type { CanalDeAviso } from '@/modules/notificaciones/domain/aviso';
+import {
+  asegurarColasDeNotificaciones,
+  crearColaDeWhatsapp,
+  crearDespertadorDeNotificaciones,
+} from '@/modules/notificaciones/infrastructure/cola-pg-boss';
+import { crearRepositorioDeNotificaciones } from '@/modules/notificaciones/infrastructure/repositorio-de-notificaciones-prisma';
+import { crearRepositorioDeSesionDeWhatsapp } from '@/modules/notificaciones/infrastructure/repositorio-de-sesion-whatsapp-prisma';
+import { crearGestorDeWhatsapp } from '@/modules/notificaciones/infrastructure/whatsapp/gestor-de-whatsapp';
+import { crearNotificadorDeWhatsapp } from '@/modules/notificaciones/infrastructure/whatsapp/notificador-de-whatsapp';
+import { crearFabricaBaileys } from '@/modules/notificaciones/infrastructure/whatsapp/socket-baileys';
 import {
   crearCambiarEstadoDeCuenta,
   crearCambiarRol,
@@ -196,11 +244,7 @@ let compartidos: Compartidos | undefined;
 function obtenerCompartidos(dependencias: Dependencias): Compartidos {
   if (compartidos) return compartidos;
   const { env, logger, baseDeDatos } = dependencias;
-  const correos = crearEnviadorEnArchivo({
-    directorio: env.CORREO_DIRECTORIO,
-    remitente: env.CORREO_REMITENTE,
-    logger,
-  });
+  const correos = crearEnviadorDeCorreos(env, logger);
   const membresias = crearRepositorioDeMembresias(baseDeDatos);
 
   const auth = crearBetterAuth({
@@ -232,6 +276,26 @@ function obtenerCompartidos(dependencias: Dependencias): Compartidos {
     limitador: crearLimitadorEnMemoria({ maximoDeFallos: 5, ventanaMinutos: 15 }),
   };
   return compartidos;
+}
+
+/** Correos de salida: SMTP en producción; en desarrollo, archivos .html para abrirlos en el navegador. */
+function crearEnviadorDeCorreos(env: Env, logger: Logger): EnviadorDeCorreos {
+  if (env.CORREO_TRANSPORTE === 'smtp' && env.SMTP_HOST) {
+    return crearEnviadorSmtp({
+      host: env.SMTP_HOST,
+      puerto: env.SMTP_PUERTO,
+      seguro: env.SMTP_SEGURO ?? env.SMTP_PUERTO === 465,
+      ...(env.SMTP_USUARIO &&
+        env.SMTP_CLAVE && { usuario: env.SMTP_USUARIO, clave: env.SMTP_CLAVE }),
+      remitente: env.CORREO_REMITENTE,
+      logger,
+    });
+  }
+  return crearEnviadorEnArchivo({
+    directorio: env.CORREO_DIRECTORIO,
+    remitente: env.CORREO_REMITENTE,
+    logger,
+  });
 }
 
 /** Instancia de Better Auth (para la semilla y las pruebas). */
@@ -287,12 +351,15 @@ export function obtenerCasosDeUso(cabeceras: () => Promise<Headers>) {
   // Consultas a plataformas (Fases 5 y 6): la web solo encola; el worker consulta. Las
   // consultas asistidas (SPOA) las confirma la persona y se guardan desde la web.
   const catalogo = catalogoDePlataformas(env);
-  const cola = crearColaDeTrabajos(() =>
+  const bossDeLaWeb = () =>
     obtenerColaDeLaWeb(
       () => crearPgBoss({ urlBaseDeDatos: env.DATABASE_URL, rol: 'web', logger }),
-      (boss) => asegurarColas(boss, catalogo.colas),
-    ),
-  );
+      async (boss) => {
+        await asegurarColas(boss, catalogo.colas);
+        await asegurarColasDeNotificaciones(boss);
+      },
+    );
+  const cola = crearColaDeTrabajos(bossDeLaWeb);
   const depsDeConsulta = { procesos, cola, automaticas: catalogo.automaticas };
   const pendientes = crearRepositorioDePendientes(baseDeDatos.paraDespacho);
   const depsDeCredenciales = {
@@ -302,7 +369,48 @@ export function obtenerCasosDeUso(cabeceras: () => Promise<Headers>) {
     auditoria,
     reloj: relojDelSistema,
   };
+  const masivas = crearRepositorioDeConsultasMasivas(baseDeDatos.paraDespacho);
+  const depsDeMasiva = {
+    masivas,
+    procesos,
+    pendientes,
+    cola,
+    lector: lectorDeTablas,
+    automaticas: catalogo.automaticas,
+    asistidas: catalogo.asistidas,
+    auditoria,
+    reloj: relojDelSistema,
+  };
+  // Notificaciones (Fase 11): la web guarda las preferencias y pide al worker vincular WhatsApp;
+  // las consultas asistidas que guarda la web también programan sus avisos.
+  const notificaciones = crearRepositorioDeNotificaciones(baseDeDatos.paraDespacho);
+  const depsDeWhatsapp = {
+    sesiones: crearRepositorioDeSesionDeWhatsapp(baseDeDatos),
+    cola: crearColaDeWhatsapp(bossDeLaWeb),
+    cifrador: crearCifrador(env),
+    auditoria,
+    reloj: relojDelSistema,
+  };
+  const programarNotificaciones = crearProgramarNotificaciones({
+    repositorio: notificaciones,
+    reloj: relojDelSistema,
+    horaDelResumen: env.NOTIFICACIONES_HORA_RESUMEN,
+    logger,
+  });
+  const despertador = crearDespertadorDeNotificaciones(bossDeLaWeb);
   const depsDeAsistida = {
+    notificaciones: {
+      async programar(datos: {
+        despachoId: string;
+        procesoId: string;
+        actuacionIds: readonly string[];
+      }) {
+        const creadas = await programarNotificaciones(datos);
+        if (creadas > 0) await despertador.despertar().catch(() => undefined);
+        return creadas;
+      },
+    },
+    masivas,
     procesos,
     lectores: catalogo.lectores,
     pendientes,
@@ -351,9 +459,32 @@ export function obtenerCasosDeUso(cabeceras: () => Promise<Headers>) {
     interpretarConsultaAsistida: crearInterpretarConsultaAsistida(depsDeAsistida),
     confirmarConsultaAsistida: crearConfirmarConsultaAsistida(depsDeAsistida),
     listarPendientes: crearListarPendientes({ pendientes }),
+    obtenerPreferenciasDeNotificacion: crearObtenerPreferencias({ repositorio: notificaciones }),
+    guardarPreferenciasDeNotificacion: crearGuardarPreferencias({
+      repositorio: notificaciones,
+      auditoria,
+      reloj: relojDelSistema,
+    }),
+    listarNotificaciones: crearListarNotificaciones({ repositorio: notificaciones }),
+    obtenerEstadoDeWhatsapp: crearObtenerEstadoDeWhatsapp(depsDeWhatsapp),
+    vincularWhatsapp: crearVincularWhatsapp(depsDeWhatsapp),
+    desvincularWhatsapp: crearDesvincularWhatsapp(depsDeWhatsapp),
+    previsualizarConsultaMasiva: crearPrevisualizarConsultaMasiva(depsDeMasiva),
+    iniciarConsultaMasiva: crearIniciarConsultaMasiva(depsDeMasiva),
+    listarConsultasMasivas: crearListarConsultasMasivas(depsDeMasiva),
+    obtenerConsultaMasiva: crearObtenerConsultaMasiva(depsDeMasiva),
+    consultarAvanceDeConsultaMasiva: crearConsultarAvanceDeConsultaMasiva(depsDeMasiva),
+    reintentarConsultaMasiva: crearReintentarConsultaMasiva(depsDeMasiva),
+    prepararExportacionDeConsultaMasiva: crearPrepararExportacionDeConsultaMasiva(depsDeMasiva),
     listarCredenciales: crearListarCredenciales(depsDeCredenciales),
     guardarCredencial: crearGuardarCredencial(depsDeCredenciales),
     eliminarCredencial: crearEliminarCredencial(depsDeCredenciales),
+    ingresarCodigoDeAcceso: crearIngresarCodigoDeAcceso({
+      ...depsDeCredenciales,
+      minutosParaCodigo: env.SIUGJ_MINUTOS_PARA_CODIGO,
+    }),
+    /** Minutos que se espera el código de acceso (para mostrar si sigue vigente). */
+    minutosParaCodigoDeAcceso: env.SIUGJ_MINUTOS_PARA_CODIGO,
     /** Sin clave de cifrado, LURIS no acepta credenciales (se explica en Ajustes → Plataformas). */
     cifradoDeCredencialesConfigurado: depsDeCredenciales.cifrador !== null,
     agregarDocumento: crearAgregarDocumento({
@@ -410,7 +541,13 @@ function catalogoDePlataformas(env: Env) {
     identificador: 'RADICADO',
     aplica: esDeLoContenciosoAdministrativo,
   });
-  const conDocumentos = new Set<CodigoPlataforma>(['RAMA_CPNU']);
+  // SIUGJ, con la cuenta del abogado o del despacho, para los procesos de la especialidad laboral.
+  automaticas.push({
+    codigo: 'SIUGJ',
+    identificador: 'RADICADO',
+    aplica: esDeLaEspecialidadLaboral,
+  });
+  const conDocumentos = new Set<CodigoPlataforma>(['RAMA_CPNU', 'SIUGJ']);
   return {
     automaticas,
     asistidas,
@@ -434,11 +571,14 @@ interface Plataformas {
   readonly consultas: ReadonlyMap<CodigoPlataforma, PlataformaJudicial>;
   readonly verificadores: ReadonlyMap<CodigoPlataforma, VerificadorDeAcceso>;
   readonly descargadores: ReadonlyMap<CodigoPlataforma, DescargadorDeDocumentos>;
+  readonly completadores: ReadonlyMap<CodigoPlataforma, CompletadorDeIngreso>;
+  /** Libera lo que tenga abierto (el navegador de SIUGJ) al detener el worker. */
+  cerrar(): Promise<void>;
   /** Procesos que el worker consulta a la vez en cada plataforma. */
   readonly concurrencia: ReadonlyMap<CodigoPlataforma, number>;
 }
 
-function construirPlataformas({ env, logger }: Dependencias): Plataformas {
+function construirPlataformas({ env, logger, baseDeDatos }: Dependencias): Plataformas {
   const comunes = {
     userAgent: env.PLATAFORMAS_USER_AGENT,
     tiempoLimiteMs: env.PLATAFORMAS_TIEMPO_LIMITE_SEGUNDOS * 1000,
@@ -503,11 +643,41 @@ function construirPlataformas({ env, logger }: Dependencias): Plataformas {
     concurrencia.set('SPOA', 1);
   }
 
+  // SIUGJ: navegador automatizado con la cuenta del proceso. Un ingreso a la vez (concurrencia 1),
+  // que además mantiene en memoria los ingresos que esperan el código de acceso.
+  const siugj = crearAdaptadorSiugj({
+    urlBase: env.SIUGJ_URL_BASE,
+    navegador: crearNavegador({
+      canal: env.SIUGJ_NAVEGADOR,
+      userAgent: env.PLATAFORMAS_USER_AGENT,
+      logger,
+    }),
+    cuentas: crearProveedorDeCuentas({
+      credenciales: crearRepositorioDeCredenciales(baseDeDatos.paraDespacho),
+      cifrador: crearCifrador(env),
+      reloj: { ahora: () => new Date() },
+      minutosParaCodigo: env.SIUGJ_MINUTOS_PARA_CODIGO,
+      logger,
+    }),
+    limitador: crearLimitadorDeRitmo({ solicitudesPorMinuto: env.SIUGJ_SOLICITUDES_POR_MINUTO }),
+    tiempoLimiteMs: comunes.tiempoLimiteMs,
+    minutosParaCodigo: env.SIUGJ_MINUTOS_PARA_CODIGO,
+    logger,
+  });
+  consultas.set('SIUGJ', siugj);
+  concurrencia.set('SIUGJ', 1);
+  verificadores.set('SIUGJ', siugj);
+
   return {
     consultas,
     verificadores,
-    descargadores: new Map([['RAMA_CPNU', crearDescargadorCpnu(cpnu)]]),
+    descargadores: new Map<CodigoPlataforma, DescargadorDeDocumentos>([
+      ['RAMA_CPNU', crearDescargadorCpnu(cpnu)],
+      ['SIUGJ', siugj],
+    ]),
+    completadores: new Map<CodigoPlataforma, CompletadorDeIngreso>([['SIUGJ', siugj]]),
     concurrencia,
+    cerrar: () => siugj.cerrar(),
   };
 }
 
@@ -521,6 +691,33 @@ export function obtenerServiciosDelWorker(boss: PgBoss) {
   const repositorio = crearRepositorioDeSincronizacion(baseDeDatos);
   const reloj = { ahora: () => new Date() };
 
+  // Notificaciones (Fase 11): correo (SMTP) y WhatsApp (Baileys, dentro de este proceso).
+  const notificaciones = crearRepositorioDeNotificaciones(baseDeDatos.paraDespacho);
+  const despertador = crearDespertadorDeNotificaciones(() => Promise.resolve(boss));
+  const programarNotificaciones = crearProgramarNotificaciones({
+    repositorio: notificaciones,
+    reloj,
+    horaDelResumen: env.NOTIFICACIONES_HORA_RESUMEN,
+    logger,
+  });
+  const cifradorDeSesiones = crearCifrador(env);
+  const gestorDeWhatsapp = cifradorDeSesiones
+    ? crearGestorDeWhatsapp({
+        sesiones: crearRepositorioDeSesionDeWhatsapp(baseDeDatos),
+        cifrador: cifradorDeSesiones,
+        fabrica: crearFabricaBaileys({ logger }),
+        reloj,
+        logger,
+        mensajesPorMinuto: env.WHATSAPP_MENSAJES_POR_MINUTO,
+      })
+    : null;
+  const notificadores = new Map<CanalDeAviso, Notificador>([
+    ['CORREO', crearNotificadorDeCorreo({ enviador: crearEnviadorDeCorreos(env, logger) })],
+  ]);
+  if (gestorDeWhatsapp) {
+    notificadores.set('WHATSAPP', crearNotificadorDeWhatsapp({ gestor: gestorDeWhatsapp }));
+  }
+
   return {
     colas: catalogo.colas,
     concurrencia: plataformas.concurrencia,
@@ -531,7 +728,24 @@ export function obtenerServiciosDelWorker(boss: PgBoss) {
       cola,
       reloj,
       logger,
+      notificaciones: {
+        async programar(datos) {
+          const creadas = await programarNotificaciones(datos);
+          if (creadas > 0) await despertador.despertar().catch(() => undefined);
+          return creadas;
+        },
+      },
     }),
+    despacharNotificaciones: crearDespacharNotificaciones({
+      repositorio: notificaciones,
+      notificadores,
+      despachosActivos: () => repositorio.despachosActivos(),
+      urlBase: env.APP_URL,
+      reloj,
+      logger,
+    }),
+    /** Null si el servidor no tiene CREDENCIALES_CLAVE: sin ella no se guarda ninguna sesión de WhatsApp. */
+    gestorDeWhatsapp,
     obtenerDocumentos: crearObtenerDocumentos({
       descargadores: plataformas.descargadores,
       documentos: crearRepositorioDeDocumentos(baseDeDatos.paraDespacho),
@@ -547,6 +761,24 @@ export function obtenerServiciosDelWorker(boss: PgBoss) {
       reloj,
       logger,
     }),
+    completarIngreso: crearCompletarIngreso({
+      credenciales: crearRepositorioDeCredenciales(baseDeDatos.paraDespacho),
+      cifrador: crearCifrador(env),
+      completadores: plataformas.completadores,
+      sincronizacion: repositorio,
+      automaticas: catalogo.automaticas,
+      cola,
+      reloj,
+      logger,
+    }),
+    registrarResultadoDeConsultaMasiva: crearRegistrarResultadoDeConsultaMasiva({
+      masivas: crearRepositorioDeConsultasMasivas(baseDeDatos.paraDespacho),
+      reloj,
+    }),
+    cerrarPlataformas: async () => {
+      await gestorDeWhatsapp?.cerrar();
+      await plataformas.cerrar();
+    },
     programarSincronizacion: crearProgramarSincronizacion({
       repositorio,
       cola,

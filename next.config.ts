@@ -2,8 +2,9 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  // pg-boss es solo de servidor: se carga desde node_modules, sin empaquetarlo.
-  serverExternalPackages: ['pg-boss'],
+  // Solo de servidor: se cargan desde node_modules, sin empaquetarlos. Baileys (WhatsApp) corre en el
+  // worker y tiene dependencias opcionales que el empaquetador no sabe resolver.
+  serverExternalPackages: ['pg-boss', '@whiskeysockets/baileys', 'nodemailer'],
   cacheComponents: true,
   partialPrefetching: true,
   experimental: {

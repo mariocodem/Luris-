@@ -1,5 +1,6 @@
 import type { FechaOficial } from '@/shared/domain/fechas';
 import type { CodigoPlataforma } from './plataforma';
+import type { SistemaDeOrigen } from './tyba';
 
 /**
  * Lo que una plataforma informa de un proceso, ya normalizado por su adaptador. Es el mismo
@@ -40,6 +41,8 @@ export interface ExpedienteExterno {
   readonly detalles: readonly DetalleDeExpediente[];
   /** Página del expediente en el portal de la plataforma, si tiene una propia. */
   readonly urlDeConsulta: string | null;
+  /** Sistema donde vive el expediente cuando la plataforma agrupa varios (p. ej. Tyba en la CPNU). */
+  readonly sistema?: SistemaDeOrigen;
 }
 
 export interface DetalleDeExpediente {
@@ -62,6 +65,8 @@ export interface ActuacionExterna {
   readonly terminoInicia: FechaOficial | null;
   readonly terminoVence: FechaOficial | null;
   readonly tieneDocumentos: boolean;
+  /** Sistema de origen de la actuación cuando llega por otra plataforma (p. ej. Tyba por la CPNU). */
+  readonly origen?: SistemaDeOrigen;
 }
 
 export interface ResultadoConsulta {

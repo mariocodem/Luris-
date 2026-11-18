@@ -136,4 +136,58 @@ describe('parsearEnv', () => {
       Buffer.alloc(16, 7).toString('base64'),
     );
   });
+
+  describe('correo y notificaciones (Fase 11)', () => {
+    it('en producción acepta el transporte SMTP con su servidor', () => {
+      const r = parsearEnv({
+        ...BASE,
+        NODE_ENV: 'production',
+        CORREO_TRANSPORTE: 'smtp',
+        SMTP_HOST: 'smtp.ejemplo.com',
+        SMTP_USUARIO: 'luris',
+        SMTP_CLAVE: 'clave',
+      });
+      expect(r.ok).toBe(true);
+      expect(r.ok && r.value).toMatchObject({ SMTP_PUERTO: 587, SMTP_HOST: 'smtp.ejemplo.com' });
+    });
+
+    it('el transporte SMTP exige el servidor', () => {
+      const r = parsearEnv({ ...BASE, CORREO_TRANSPORTE: 'smtp' });
+      expect(r.ok).toBe(false);
+      expect(!r.ok && r.error.problemas[0]).toMatch(/^SMTP_HOST:/);
+    });
+
+    it('el usuario y la clave del SMTP van juntos', () => {
+      const r = parsearEnv({
+        ...BASE,
+        CORREO_TRANSPORTE: 'smtp',
+        SMTP_HOST: 'smtp.ejemplo.com',
+        SMTP_USUARIO: 'luris',
+      });
+      expect(r.ok).toBe(false);
+      expect(!r.ok && r.error.problemas[0]).toMatch(/^SMTP_CLAVE:/);
+    });
+
+    it('lee SMTP_SEGURO como booleano y valida el puerto', () => {
+      const r = parsearEnv({
+        ...BASE,
+        CORREO_TRANSPORTE: 'smtp',
+        SMTP_HOST: 'smtp.ejemplo.com',
+        SMTP_PUERTO: '465',
+        SMTP_SEGURO: 'true',
+      });
+      expect(r.ok && r.value).toMatchObject({ SMTP_PUERTO: 465, SMTP_SEGURO: true });
+      expect(parsearEnv({ ...BASE, SMTP_PUERTO: '70000' }).ok).toBe(false);
+    });
+
+    it('tiene valores por defecto para el resumen diario y el ritmo de WhatsApp', () => {
+      const r = parsearEnv(BASE);
+      expect(r.ok && r.value).toMatchObject({
+        NOTIFICACIONES_HORA_RESUMEN: 7,
+        WHATSAPP_MENSAJES_POR_MINUTO: 6,
+      });
+      expect(parsearEnv({ ...BASE, NOTIFICACIONES_HORA_RESUMEN: '24' }).ok).toBe(false);
+      expect(parsearEnv({ ...BASE, WHATSAPP_MENSAJES_POR_MINUTO: '100' }).ok).toBe(false);
+    });
+  });
 });

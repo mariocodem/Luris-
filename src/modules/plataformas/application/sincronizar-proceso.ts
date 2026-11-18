@@ -31,7 +31,8 @@ export function crearSincronizarProceso(deps: DependenciasDeSincronizacion) {
     const id = plataforma.identificador === 'RADICADO' ? proceso.radicado : proceso.nunc;
     if (!id) return ok({ tipo: 'OMITIDO', motivo: 'SIN_IDENTIFICADOR' });
 
-    const consulta = await plataforma.consultar(id, ctx);
+    // Las plataformas con ingreso (SIUGJ) eligen la cuenta según el proceso.
+    const consulta = await plataforma.consultar(id, { ...ctx, alcance: { despachoId, procesoId } });
     if (!consulta.ok) {
       await deps.repositorio.registrarFallo(
         despachoId,

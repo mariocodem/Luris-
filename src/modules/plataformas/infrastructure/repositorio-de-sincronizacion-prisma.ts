@@ -2,6 +2,7 @@ import { Prisma, type PrismaClient } from '@/generated/prisma/client';
 import { fechaOficialComoDate } from '@/shared/domain/fechas';
 import type { ClienteDeDespacho } from '@/shared/infrastructure/prisma/aislamiento-despacho';
 import type { RepositorioDeSincronizacion } from '../application/puertos';
+import { claveDeDeduplicacion } from '../domain/actuaciones';
 import { aDatosGuardados } from './datos-de-proceso';
 
 const FORMATO_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -57,6 +58,26 @@ export function crearRepositorioDeSincronizacion(baseDeDatos: {
             update: datos,
             select: { id: true },
           });
+          // Las actuaciones de Tyba que ya estaban guardadas (de consultas anteriores a la marca de
+          // origen) se marcan ahora, sin duplicarlas.
+          const clavesPorOrigen = new Map<string, string[]>();
+          for (const a of resultado.actuaciones) {
+            if (!a.origen) continue;
+            clavesPorOrigen.set(a.origen, [
+              ...(clavesPorOrigen.get(a.origen) ?? []),
+              claveDeDeduplicacion(a),
+            ]);
+          }
+          for (const [origen, claves] of clavesPorOrigen) {
+            await tx.actuacion.updateMany({
+              where: {
+                procesoPlataformaId: registro.id,
+                origen: null,
+                claveDeduplicacion: { in: claves },
+              },
+              data: { origen: origen as 'TYBA' },
+            });
+          }
           if (nuevas.length === 0) return [];
 
           const creadas = await tx.actuacion.createManyAndReturn({
@@ -73,6 +94,7 @@ export function crearRepositorioDeSincronizacion(baseDeDatos: {
               terminoInicia: a.terminoInicia ? fechaOficialComoDate(a.terminoInicia) : null,
               terminoVence: a.terminoVence ? fechaOficialComoDate(a.terminoVence) : null,
               tieneDocumentos: a.tieneDocumentos,
+              origen: a.origen ?? null,
               cargaInicial,
               detectadaEn: ahora,
             })),

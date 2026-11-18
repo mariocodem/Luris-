@@ -33,6 +33,8 @@ export function deLaPlataforma(plataforma: CodigoPlataforma): string {
  * Lo que conviene saber de los datos de cada plataforma en la ficha (se muestra junto a ellos).
  */
 export const NOTA_SOBRE_LOS_DATOS: Readonly<Partial<Record<CodigoPlataforma, string>>> = {
+  SIUGJ:
+    'LURIS consulta SIUGJ con la cuenta de usuario externo del abogado responsable (o la del despacho). Solo ve los expedientes a los que esa cuenta tiene acceso.',
   SAMAI:
     'Las actuaciones de este proceso llegan por la Rama Judicial, que las toma de SAMAI. SAMAI pide resolver un reto («No soy un robot») para mostrar el proceso: ábrelo allí para descargar sus documentos públicos y agrégalos a la actuación aquí.',
 };
@@ -55,6 +57,10 @@ export const ESTADOS_DE_CONSULTA = [
   'REQUIERE_INTERVENCION',
   'LIMITE_DE_CONSULTAS',
   'RESPUESTA_INESPERADA',
+  /** La cuenta entra a la plataforma, pero no tiene acceso a este expediente (SIUGJ). */
+  'SIN_ACCESO',
+  /** La plataforma exige una cuenta y nadie del proceso ni el despacho registró una. */
+  'SIN_CREDENCIAL',
 ] as const;
 
 export type EstadoConsulta = (typeof ESTADOS_DE_CONSULTA)[number];
@@ -68,4 +74,6 @@ export const DESCRIPCION_DE_ESTADO: Readonly<Record<EstadoConsulta, string>> = {
   REQUIERE_INTERVENCION: 'Necesita tu confirmación',
   LIMITE_DE_CONSULTAS: 'La plataforma pidió esperar; se reintentará',
   RESPUESTA_INESPERADA: 'La plataforma respondió algo inesperado; lo estamos revisando',
+  SIN_ACCESO: 'Tu cuenta no tiene acceso a este expediente',
+  SIN_CREDENCIAL: 'Falta registrar un usuario de la plataforma',
 };

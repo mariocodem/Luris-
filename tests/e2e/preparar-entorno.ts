@@ -1,3 +1,4 @@
+import { rmSync } from 'node:fs';
 import {
   cargarEntorno,
   ejecutarPrisma,
@@ -15,4 +16,8 @@ const url = urlDePruebas('_e2e', process.env.E2E_DATABASE_URL);
 await recrearBaseDeDatos(url, '_e2e');
 ejecutarPrisma(url, ['migrate', 'deploy'], 'Las migraciones no aplicaron sobre la base e2e');
 ejecutarPrisma(url, ['db', 'seed'], 'La semilla no se pudo aplicar en la base e2e');
+// Los correos de la ejecución anterior no deben confundir a las pruebas de avisos.
+if (process.env.CORREO_DIRECTORIO) {
+  rmSync(process.env.CORREO_DIRECTORIO, { recursive: true, force: true });
+}
 console.log(`Base e2e lista: ${url.pathname.slice(1)}`);

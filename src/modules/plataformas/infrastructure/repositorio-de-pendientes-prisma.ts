@@ -33,6 +33,21 @@ export function crearRepositorioDePendientes(
       return creados.count;
     },
 
+    async abrirDeConsultaMasiva(despachoId, pendientes) {
+      if (pendientes.length === 0) return 0;
+      const creados = await paraDespacho(despachoId).pendienteDeConfirmacion.createMany({
+        data: pendientes.map((p) => ({
+          despachoId,
+          procesoId: p.procesoId,
+          plataforma: p.plataforma,
+          origen: 'MASIVA' as const,
+        })),
+        // Si ya hay uno abierto (programado u otra consulta masiva), se conserva.
+        skipDuplicates: true,
+      });
+      return creados.count;
+    },
+
     async resolver(despachoId, procesoId, plataforma, ahora) {
       await paraDespacho(despachoId).pendienteDeConfirmacion.updateMany({
         where: { procesoId, plataforma, resueltoEn: null },

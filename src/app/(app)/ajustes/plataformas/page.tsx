@@ -2,18 +2,34 @@ import { ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 import {
   descripcionDeVerificacion,
+  esperaCodigoDeAcceso,
   PLATAFORMAS_CON_CREDENCIALES,
   USO_DE_LA_CREDENCIAL,
 } from '@/modules/plataformas/domain/credenciales';
 import { NOMBRES_DE_PLATAFORMA } from '@/modules/plataformas/domain/plataforma';
-import { EliminarCredencial, FormularioDeCredencial } from '@/modules/plataformas/ui/credenciales';
+import {
+  EliminarCredencial,
+  FormularioDeCodigoDeAcceso,
+  FormularioDeCredencial,
+} from '@/modules/plataformas/ui/credenciales';
 import { EnlaceDeRegreso } from '@/modules/procesos/ui/enlace-de-regreso';
 import { alcanceDe } from '@/modules/usuarios/domain/permisos';
 import { formatearDia, formatearDiaYHora } from '@/shared/domain/fechas';
 import { Encabezado, TituloDeSeccion } from '@/shared/ui/components/encabezado';
 import { casosDeUso } from '../../../_servidor/peticion';
 import { sesionDeLaPeticion } from '../../../_servidor/sesion';
-import { eliminarCredencialAccion, guardarCredencialAccion } from './acciones';
+import {
+  eliminarCredencialAccion,
+  guardarCredencialAccion,
+  ingresarCodigoAccion,
+} from './acciones';
+
+const hora = new Intl.DateTimeFormat('es-CO', {
+  timeZone: 'America/Bogota',
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true,
+});
 
 export const metadata: Metadata = { title: 'Plataformas' };
 
@@ -31,6 +47,8 @@ export default async function PaginaDePlataformas() {
   const puedeDelDespacho =
     sesion.perfil !== 'superadmin' &&
     alcanceDe(sesion.perfil, 'CREDENCIALES_GESTIONAR') === 'TODOS';
+  const ahora = new Date();
+  const minutos = casos.minutosParaCodigoDeAcceso;
 
   return (
     <>
@@ -38,7 +56,7 @@ export default async function PaginaDePlataformas() {
         <EnlaceDeRegreso href="/ajustes" texto="Ajustes" />
         <Encabezado
           titulo="Plataformas"
-          descripcion="Algunas plataformas solo muestran ciertos documentos a una cuenta registrada. Si guardas tu usuario y contraseña, LURIS los consulta por ti."
+          descripcion="Algunas plataformas solo muestran ciertos expedientes o documentos a una cuenta registrada. Si guardas tu usuario y contraseña, LURIS los consulta por ti."
         />
       </div>
 
@@ -125,6 +143,19 @@ export default async function PaginaDePlataformas() {
                               </>
                             ) : null}
                           </span>
+                          {c.codigoSolicitadoEn &&
+                          esperaCodigoDeAcceso(c.codigoSolicitadoEn, ahora, minutos) &&
+                          (c.membresiaId === propia?.membresiaId ||
+                            (c.alcance === 'DESPACHO' && puedeDelDespacho)) ? (
+                            <FormularioDeCodigoDeAcceso
+                              credencialId={c.id}
+                              plataforma={NOMBRES_DE_PLATAFORMA[plataforma]}
+                              venceA={hora.format(
+                                new Date(c.codigoSolicitadoEn.getTime() + minutos * 60_000),
+                              )}
+                              accion={ingresarCodigoAccion}
+                            />
+                          ) : null}
                           <EliminarCredencial
                             id={c.id}
                             descripcion={`la credencial de ${NOMBRES_DE_PLATAFORMA[plataforma]}${c.alcance === 'DESPACHO' ? ' del despacho' : ''}`}

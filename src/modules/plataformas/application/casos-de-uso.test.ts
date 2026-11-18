@@ -154,6 +154,7 @@ function crearCola() {
       return estados.get(id) ?? null;
     },
     async encolarVerificacion() {},
+    async encolarCodigoDeAcceso() {},
     async encolarDocumentos({ actuacionId }) {
       documentos.push(actuacionId);
     },
@@ -469,6 +470,7 @@ function crearPendientes() {
       abiertos.push({ despachoId, plataforma, antesDe });
       return despachoId === DESPACHO.id ? 1 : 0;
     },
+    abrirDeConsultaMasiva: async (_d, lista) => lista.length,
     async resolver(_d, procesoId, plataforma) {
       resueltos.push(`${procesoId}:${plataforma}`);
     },

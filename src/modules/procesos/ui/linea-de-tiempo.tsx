@@ -1,8 +1,8 @@
-import { Download, Eye, Paperclip } from 'lucide-react';
+import { Download, ExternalLink, Eye, Paperclip } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from 'cn';
 import { AgregarDocumento } from '@/modules/documentos/ui/agregar-documento';
-import { NOMBRES_DE_PLATAFORMA } from '@/modules/plataformas/domain/plataforma';
+import { etiquetaDeOrigen, URL_DE_DESCARGA_DE_TYBA } from '@/modules/plataformas/domain/tyba';
 import { formatearFechaOficial } from '@/shared/domain/fechas';
 import { SelloDeFecha } from '@/shared/ui/components/sello-de-fecha';
 import type { ActuacionDeProceso, DocumentoDeActuacion } from '../application/puertos';
@@ -74,7 +74,11 @@ export function LineaDeTiempo({
                 </p>
               ) : null}
               {actuacion.documentos.length > 0 ? (
-                <ListaDeDocumentos procesoId={procesoId} documentos={actuacion.documentos} />
+                <ListaDeDocumentos
+                  procesoId={procesoId}
+                  documentos={actuacion.documentos}
+                  esDeTyba={actuacion.origen === 'TYBA'}
+                />
               ) : null}
               {puedeAgregarDocumentos ? (
                 <div>
@@ -82,7 +86,7 @@ export function LineaDeTiempo({
                 </div>
               ) : null}
               <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-                <span>{NOMBRES_DE_PLATAFORMA[actuacion.plataforma]}</span>
+                <span>{etiquetaDeOrigen(actuacion.plataforma, actuacion.origen)}</span>
                 {mostrarDespacho && actuacion.despachoJudicial ? (
                   <>
                     <span aria-hidden>·</span>
@@ -131,10 +135,13 @@ function Termino({ inicia, vence }: { readonly inicia: Date | null; readonly ven
 function ListaDeDocumentos({
   procesoId,
   documentos,
+  esDeTyba,
 }: {
   readonly procesoId: string;
   readonly documentos: readonly DocumentoDeActuacion[];
+  readonly esDeTyba: boolean;
 }) {
+  const sinDescargar = esDeTyba && documentos.some((d) => d.estado === 'NO_DISPONIBLE');
   return (
     <ul className="mt-1 flex flex-col gap-1.5" aria-label="Documentos de la actuación">
       {documentos.map((documento) => (
@@ -171,6 +178,33 @@ function ListaDeDocumentos({
           )}
         </li>
       ))}
+      {sinDescargar ? <AyudaDeDescargaEnTyba /> : null}
     </ul>
+  );
+}
+
+/**
+ * Tyba entrega los documentos por una página con CAPTCHA, y LURIS no resuelve retos (§6): la
+ * persona los descarga ella y los agrega a la actuación con «Agregar documento».
+ */
+function AyudaDeDescargaEnTyba() {
+  return (
+    <li className="mt-1 flex max-w-[68ch] flex-col gap-1 rounded-lg bg-muted px-3 py-2 text-sm text-pretty">
+      <span>
+        Puedes descargarlo en Tyba con el <strong>número de certificación</strong> que viene en la
+        comunicación del juzgado y el radicado como código del proceso. Luego súbelo aquí con
+        «Agregar documento».
+      </span>
+      <a
+        href={URL_DE_DESCARGA_DE_TYBA}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex w-fit items-center gap-1 font-medium text-primary underline-offset-4 hover:underline"
+      >
+        <ExternalLink className="size-3.5" aria-hidden />
+        Abrir la descarga de Tyba
+        <span className="sr-only"> (se abre en otra pestaña)</span>
+      </a>
+    </li>
   );
 }
