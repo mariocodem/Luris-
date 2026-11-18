@@ -1,4 +1,11 @@
 import type { NextConfig } from 'next';
+import {
+  RUTAS_CON_POLITICA_DE_CONTENIDO,
+  cabecerasDeContenido,
+  cabecerasGenerales,
+} from './src/shared/infrastructure/seguridad';
+
+const produccion = process.env.NODE_ENV === 'production';
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -17,14 +24,26 @@ const nextConfig: NextConfig = {
     return [{ source: '/', destination: '/inicio', permanent: false }];
   },
   async headers() {
-    // Las páginas con enlaces de un solo uso no deben filtrar el token en el Referer.
-    return ['/invitacion/:token', '/restablecer-contrasena/:token'].map((source) => ({
-      source,
-      headers: [
-        { key: 'Referrer-Policy', value: 'no-referrer' },
-        { key: 'Cache-Control', value: 'no-store' },
-      ],
-    }));
+    return [
+      { source: '/:path*', headers: cabecerasGenerales({ produccion }) },
+      // Next.js no admite una regla sin cabeceras: en desarrollo no hay política de contenido.
+      ...(produccion
+        ? [
+            {
+              source: RUTAS_CON_POLITICA_DE_CONTENIDO,
+              headers: cabecerasDeContenido({ produccion }),
+            },
+          ]
+        : []),
+      // Las páginas con enlaces de un solo uso no deben filtrar el token en el Referer.
+      ...['/invitacion/:token', '/restablecer-contrasena/:token'].map((source) => ({
+        source,
+        headers: [
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'Cache-Control', value: 'no-store' },
+        ],
+      })),
+    ];
   },
   turbopack: {
     rules: {

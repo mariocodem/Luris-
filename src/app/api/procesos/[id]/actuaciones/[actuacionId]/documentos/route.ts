@@ -44,7 +44,9 @@ export async function POST(
 
   const maximo = env.DOCUMENTO_TAMANO_MAXIMO_MB * 1024 * 1024;
   // El formulario agrega algo de sobrecarga al archivo.
-  if (Number(request.headers.get('content-length')) > maximo + 64 * 1024) {
+  // Sin tamaño declarado no se lee el cuerpo: un envío «por trozos» podría llenar la memoria.
+  const declarado = Number(request.headers.get('content-length'));
+  if (!Number.isFinite(declarado) || declarado <= 0 || declarado > maximo + 64 * 1024) {
     return responder(413, {
       ok: false,
       mensaje: `El archivo pesa más de ${env.DOCUMENTO_TAMANO_MAXIMO_MB} MB, el máximo permitido.`,

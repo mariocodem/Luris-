@@ -2,6 +2,7 @@
 export default function CargandoConsultaMasiva() {
   return (
     <div
+      role="status"
       aria-busy="true"
       aria-label="Cargando la consulta masiva"
       className="flex max-w-4xl flex-col gap-8"

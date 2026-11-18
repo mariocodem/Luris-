@@ -1,7 +1,12 @@
 /** Mientras carga la lista: silueta del encabezado, los filtros y las filas, sin saltos. */
 export default function CargandoProcesos() {
   return (
-    <div aria-busy="true" aria-label="Cargando procesos" className="flex flex-col gap-8">
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label="Cargando procesos"
+      className="flex flex-col gap-8"
+    >
       <div className="flex flex-col gap-3">
         <div className="h-9 w-48 animate-pulse rounded-md bg-muted" />
         <div className="h-4 w-full max-w-xl animate-pulse rounded-md bg-muted" />

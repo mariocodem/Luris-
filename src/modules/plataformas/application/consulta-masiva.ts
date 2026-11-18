@@ -5,6 +5,8 @@ import type {
   RepositorioDeProcesos,
 } from '@/modules/procesos/application/puertos';
 import { permisosSobreProceso, asignacionDelCreador } from '@/modules/procesos/domain/reglas';
+import { reservarCupo } from '@/modules/usuarios/application/cupo';
+import type { LimitadorDeIntentos } from '@/modules/usuarios/application/puertos';
 import {
   exigirMiembroConPermiso,
   type ContextoDeSesion,
@@ -61,6 +63,8 @@ export interface DependenciasDeConsultaMasiva {
   readonly asistidas: readonly PlataformaAsistida[];
   readonly auditoria: RegistradorDeAuditoria;
   readonly reloj: Reloj;
+  /** Cupo de consultas masivas por persona (frena el abuso del worker y de las plataformas). */
+  readonly limitador?: LimitadorDeIntentos;
 }
 
 // ─── Qué se consulta de cada número ───────────────────────────────────────────
@@ -262,6 +266,8 @@ export function crearIniciarConsultaMasiva(deps: DependenciasDeConsultaMasiva) {
     if (!registrar.ok) return registrar;
     const actor = permiso.value;
     const despachoId = actor.despacho.id;
+    const cupo = reservarCupo(deps.limitador, `consulta-masiva:${actor.usuarioId}`);
+    if (!cupo.ok) return cupo;
 
     const lectura = leerIdentificadores(solicitud.identificadores.join('\n'));
     if (lectura.validos.length === 0) {

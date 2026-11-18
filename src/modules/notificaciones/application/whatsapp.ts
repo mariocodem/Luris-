@@ -1,5 +1,7 @@
 import type { RegistradorDeAuditoria } from '@/modules/auditoria/domain/registro-de-auditoria';
 import type { CifradorDeCredenciales } from '@/modules/plataformas/application/puertos';
+import { reservarCupo } from '@/modules/usuarios/application/cupo';
+import type { LimitadorDeIntentos } from '@/modules/usuarios/application/puertos';
 import {
   exigirMiembroConPermiso,
   type ContextoDeSesion,
@@ -32,6 +34,8 @@ export interface DependenciasDeWhatsapp {
   readonly cifrador: CifradorDeCredenciales | null;
   readonly auditoria: RegistradorDeAuditoria;
   readonly reloj: Reloj;
+  /** Cupo de vinculaciones: cada una abre una conexión con WhatsApp. */
+  readonly limitador?: LimitadorDeIntentos;
 }
 
 /** Solo el administrador del despacho gestiona el WhatsApp del despacho (§9). */
@@ -112,6 +116,8 @@ export function crearVincularWhatsapp(deps: DependenciasDeWhatsapp) {
       );
     }
     const despachoId = permiso.value.despacho.id;
+    const cupo = reservarCupo(deps.limitador, `whatsapp:${despachoId}`);
+    if (!cupo.ok) return cupo;
     const sesion = await deps.sesiones.obtener(despachoId);
     if (sesion.estado === 'CONECTADA') {
       return err(

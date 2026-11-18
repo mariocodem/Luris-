@@ -3,6 +3,8 @@ import {
   exigirMiembroConPermiso,
   type ContextoDeSesion,
 } from '@/modules/usuarios/application/contexto-de-sesion';
+import { reservarCupo } from '@/modules/usuarios/application/cupo';
+import type { LimitadorDeIntentos } from '@/modules/usuarios/application/puertos';
 import { alcanceDe } from '@/modules/usuarios/domain/permisos';
 import {
   AppError,
@@ -49,6 +51,8 @@ export class ErrorCifradoNoConfigurado extends AppError {
 const NO_ENCONTRADA = 'No encontramos esa credencial. Recarga la página.';
 
 export interface DependenciasDeCredenciales {
+  /** Cupo de credenciales guardadas por persona: cada una dispara un ingreso a un tercero. */
+  readonly limitador?: LimitadorDeIntentos;
   readonly credenciales: RepositorioDeCredenciales;
   /** null si el servidor no tiene clave de cifrado configurada. */
   readonly cifrador: CifradorDeCredenciales | null;
@@ -111,6 +115,8 @@ export function crearGuardarCredencial(deps: DependenciasDeCredenciales) {
       );
     }
     if (!deps.cifrador) return err(new ErrorCifradoNoConfigurado());
+    const cupo = reservarCupo(deps.limitador, `credencial:${actor.usuarioId}`);
+    if (!cupo.ok) return cupo;
 
     const datos = {
       despachoId: actor.despacho.id,

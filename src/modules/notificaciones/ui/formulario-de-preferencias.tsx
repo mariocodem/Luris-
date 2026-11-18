@@ -15,7 +15,7 @@ import {
   NOMBRE_DE_FRECUENCIA,
   TEXTO_DE_CONSENTIMIENTO_WHATSAPP,
   type Frecuencia,
-} from '../domain/preferencias';
+} from '../domain/frecuencias';
 import { ADVERTENCIAS_DE_WHATSAPP } from '../domain/whatsapp';
 
 type Accion = (anterior: EstadoDeFormulario, formulario: FormData) => Promise<EstadoDeFormulario>;

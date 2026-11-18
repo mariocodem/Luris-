@@ -111,7 +111,7 @@ function MenuDePersona({
       {enBarraLateral ? (
         <DropdownMenuTrigger
           className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors duration-150 hover:bg-sidebar-accent focus-visible:outline-sidebar-ring"
-          aria-label={`Cuenta de ${persona.nombre}`}
+          // Sin aria-label: el nombre sale del texto visible (nombre y rol), como pide WCAG 2.5.3.
         >
           <Iniciales nombre={persona.nombre} enBarraLateral />
           <span className="min-w-0 flex-1">
@@ -122,11 +122,10 @@ function MenuDePersona({
         </DropdownMenuTrigger>
       ) : (
         // En la barra superior del móvil basta con las iniciales: deja espacio al despacho.
-        <DropdownMenuTrigger
-          className="flex size-11 items-center justify-center rounded-full transition-colors duration-150 hover:bg-accent"
-          aria-label={`Cuenta de ${persona.nombre}`}
-        >
+        <DropdownMenuTrigger className="flex size-11 items-center justify-center rounded-full transition-colors duration-150 hover:bg-accent">
           <Iniciales nombre={persona.nombre} enBarraLateral={false} />
+          {/* Las iniciales son un adorno: el nombre accesible es este texto (WCAG 2.5.3). */}
+          <span className="sr-only">Cuenta de {persona.nombre}</span>
         </DropdownMenuTrigger>
       )}
       <DropdownMenuContent align="end" side={enBarraLateral ? 'top' : 'bottom'} className="w-64">

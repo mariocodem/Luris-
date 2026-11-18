@@ -20,6 +20,15 @@ const CLAVES_SENSIBLES = [
   'cookie',
   'credencial',
   'credenciales',
+  // Fase 8 y 11: sesiones de plataformas, código de acceso, QR y número de WhatsApp.
+  'sesion',
+  'sesionCifrada',
+  'codigoDeAcceso',
+  'qr',
+  'datosCifrados',
+  'secretoCifrado',
+  'numeroWhatsapp',
+  'set-cookie',
 ];
 
 const RUTAS_OCULTAS = CLAVES_SENSIBLES.flatMap((clave) => [clave, `*.${clave}`]);
@@ -28,6 +37,8 @@ export interface OpcionesLogger {
   readonly nivel: pino.LevelWithSilent;
   readonly formato: 'json' | 'pretty';
   readonly servicio: 'web' | 'worker' | 'cli';
+  /** Solo para pruebas: dónde escribir el JSON (por defecto, la salida estándar). */
+  readonly destino?: { write(linea: string): unknown };
 }
 
 export function crearLoggerPino(opciones: OpcionesLogger): Logger {
@@ -47,7 +58,7 @@ export function crearLoggerPino(opciones: OpcionesLogger): Logger {
     // transports de pino, que no funcionan bien dentro del bundle de Next.js.
     opciones.formato === 'pretty'
       ? pretty({ colorize: true, translateTime: 'SYS:HH:MM:ss', ignore: 'pid,hostname,app' })
-      : undefined,
+      : opciones.destino,
   );
   return adaptar(base);
 }

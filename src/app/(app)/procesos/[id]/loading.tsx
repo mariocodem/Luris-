@@ -1,7 +1,12 @@
 /** Mientras carga la ficha: silueta del encabezado, la línea de tiempo y la columna lateral. */
 export default function CargandoProceso() {
   return (
-    <div aria-busy="true" aria-label="Cargando el proceso" className="flex flex-col gap-8">
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label="Cargando el proceso"
+      className="flex flex-col gap-8"
+    >
       <div className="flex flex-col gap-3">
         <div className="h-4 w-24 animate-pulse rounded bg-muted" />
         <div className="h-9 w-3/5 animate-pulse rounded-md bg-muted" />

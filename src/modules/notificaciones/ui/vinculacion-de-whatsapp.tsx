@@ -4,7 +4,7 @@ import { MessageCircle, Unlink } from 'lucide-react';
 import { useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/shared/ui/components/button';
-import { formatearNumeroWhatsapp } from '../domain/preferencias';
+import { formatearNumeroWhatsapp } from '../domain/frecuencias';
 import { ADVERTENCIAS_DE_WHATSAPP } from '../domain/whatsapp';
 
 export interface EstadoDeVinculacion {

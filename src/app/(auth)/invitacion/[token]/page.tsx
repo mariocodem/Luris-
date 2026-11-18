@@ -58,7 +58,12 @@ async function Invitacion({
 
 function Cargando() {
   return (
-    <div className="flex flex-col gap-3" aria-busy="true" aria-label="Cargando la invitación">
+    <div
+      className="flex flex-col gap-3"
+      role="status"
+      aria-busy="true"
+      aria-label="Cargando la invitación"
+    >
       <div className="h-8 w-3/4 animate-pulse rounded-md bg-muted" />
       <div className="h-4 w-full animate-pulse rounded-md bg-muted" />
       <div className="h-10 w-full animate-pulse rounded-lg bg-muted" />

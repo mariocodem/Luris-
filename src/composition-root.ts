@@ -236,6 +236,12 @@ interface Compartidos {
   readonly auth: InstanciaBetterAuth;
   readonly correos: EnviadorDeCorreos;
   readonly limitador: LimitadorDeIntentos;
+  /** Cupos de acciones costosas o sensibles, por persona o despacho (Fase 12). */
+  readonly cupos: {
+    readonly consultaMasiva: LimitadorDeIntentos;
+    readonly credenciales: LimitadorDeIntentos;
+    readonly whatsapp: LimitadorDeIntentos;
+  };
 }
 
 let compartidos: Compartidos | undefined;
@@ -274,6 +280,14 @@ function obtenerCompartidos(dependencias: Dependencias): Compartidos {
     correos,
     // 5 fallos por correo (o por IP) en 15 minutos bloquean el resto de la ventana.
     limitador: crearLimitadorEnMemoria({ maximoDeFallos: 5, ventanaMinutos: 15 }),
+    cupos: {
+      // 10 consultas masivas cada 15 minutos por persona (un lote ya son hasta 400 procesos).
+      consultaMasiva: crearLimitadorEnMemoria({ maximoDeFallos: 10, ventanaMinutos: 15 }),
+      // 10 credenciales guardadas cada 15 minutos: cada una hace un ingreso real a la plataforma.
+      credenciales: crearLimitadorEnMemoria({ maximoDeFallos: 10, ventanaMinutos: 15 }),
+      // 5 vinculaciones de WhatsApp cada 15 minutos por despacho.
+      whatsapp: crearLimitadorEnMemoria({ maximoDeFallos: 5, ventanaMinutos: 15 }),
+    },
   };
   return compartidos;
 }
@@ -310,7 +324,7 @@ export function obtenerBetterAuth(): InstanciaBetterAuth {
 export function obtenerCasosDeUso(cabeceras: () => Promise<Headers>) {
   const dependencias = obtenerDependencias('web');
   const { env, logger, baseDeDatos } = dependencias;
-  const { auth, correos, limitador } = obtenerCompartidos(dependencias);
+  const { auth, correos, limitador, cupos } = obtenerCompartidos(dependencias);
 
   const autenticacion = crearServicioBetterAuth({
     auth,
@@ -363,6 +377,7 @@ export function obtenerCasosDeUso(cabeceras: () => Promise<Headers>) {
   const depsDeConsulta = { procesos, cola, automaticas: catalogo.automaticas };
   const pendientes = crearRepositorioDePendientes(baseDeDatos.paraDespacho);
   const depsDeCredenciales = {
+    limitador: cupos.credenciales,
     credenciales: crearRepositorioDeCredenciales(baseDeDatos.paraDespacho),
     cifrador: crearCifrador(env),
     cola,
@@ -371,6 +386,7 @@ export function obtenerCasosDeUso(cabeceras: () => Promise<Headers>) {
   };
   const masivas = crearRepositorioDeConsultasMasivas(baseDeDatos.paraDespacho);
   const depsDeMasiva = {
+    limitador: cupos.consultaMasiva,
     masivas,
     procesos,
     pendientes,
@@ -385,6 +401,7 @@ export function obtenerCasosDeUso(cabeceras: () => Promise<Headers>) {
   // las consultas asistidas que guarda la web también programan sus avisos.
   const notificaciones = crearRepositorioDeNotificaciones(baseDeDatos.paraDespacho);
   const depsDeWhatsapp = {
+    limitador: cupos.whatsapp,
     sesiones: crearRepositorioDeSesionDeWhatsapp(baseDeDatos),
     cola: crearColaDeWhatsapp(bossDeLaWeb),
     cifrador: crearCifrador(env),
